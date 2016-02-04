@@ -1,3 +1,22 @@
+//
+//  GTeXT.d
+//  GTeXT
+//
+//  Created by thotgamma on 2016/02/04.
+//
+//	#このファイル:
+//		GTeXTの本体ファイル。
+//		今の所構造体をPDFに出力するコードだけが実装されている。
+//
+//	#(今実装されている)コードの流れ:
+//		1.PDFを構成するオブジェクトが入った配列からオブジェクトを一つずつ取り出し、ファイルに書き出す。
+//		2.この際、書き出した文字のバイト数を数えてsizeに足す。
+//		3.すなわちsizeは先頭からその次のオブジェクトまでのバイト数を示す。
+//		4.それぞれのオブジェクトまでのバイト数を、sizeをdistanceFromTop[]に格納することでメモる。(詳しくはoutputpdf()のコメント参照のこと)
+//		5.最後にdistanceFromTop[]を用いて相互参照テーブルを作成する。
+//
+//
+
 import std.stdio;
 import std.algorithm.iteration;
 import std.array;
@@ -35,15 +54,18 @@ void main(){
 	}
 
 	//テスト用にPDFのオブジェクトを手動で追加した
+	//0 0 objは空(プログラムの簡易化のために下駄を履かせた)
 	pdfObject obj;
 	pdfObjects ~= obj;
 
+	//1 0 obj
 	obj.records = null;
 	obj.stream = null;
 	obj.records ~= pdfRecord("/Type","/Catalog");
 	obj.records ~= pdfRecord("/Pages","2 0 R");
 	pdfObjects ~= obj;
 
+	//2 0 obj
 	obj.records = null;
 	obj.stream = null;
 	obj.records ~= pdfRecord("/Type","/Pages");
@@ -51,11 +73,13 @@ void main(){
 	obj.records ~= pdfRecord("/Count", "1");
 	pdfObjects ~= obj;
 
+	//3 0 obj
 	obj.records = null;
 	obj.stream = null;
 	obj.records ~= pdfRecord("/Font","6 0 R");
 	pdfObjects ~= obj;
 
+	//4 0 obj
 	obj.records = null;
 	obj.stream = null;
 	obj.records ~= pdfRecord("/Type","/Page");
@@ -65,6 +89,7 @@ void main(){
 	obj.records ~= pdfRecord("/Contents","5 0 R");
 	pdfObjects ~= obj;
 
+	//5 0 obj
 	obj.records = null;
 	obj.stream = null;
 	obj.records ~= pdfRecord("/Length","58");
@@ -78,11 +103,13 @@ void main(){
 	obj.stream ~= "ET";
 	pdfObjects ~= obj;
 
+	//6 0 obj
 	obj.records = null;
 	obj.stream = null;
 	obj.records ~= pdfRecord("/F0","7 0 R");
 	pdfObjects ~= obj;
 
+	//7 0 obj
 	obj.records = null;
 	obj.stream = null;
 	obj.records ~= pdfRecord("/Type","/Font");
@@ -92,6 +119,7 @@ void main(){
 	obj.records ~= pdfRecord("/DescendantFonts","[8 0 R]");
 	pdfObjects ~= obj;
 
+	//8 0 obj
 	obj.records = null;
 	obj.stream = null;
 	obj.records ~= pdfRecord("/Type","/Font");
@@ -101,6 +129,7 @@ void main(){
 	obj.records ~= pdfRecord("/FontDescriptor","10 0 R");
 	pdfObjects ~= obj;
 	
+	//9 0 obj
 	obj.records = null;
 	obj.stream = null;
 	obj.records ~= pdfRecord("/Registry","(Adobe)");
@@ -108,6 +137,7 @@ void main(){
 	obj.records ~= pdfRecord("/Supplement","6");
 	pdfObjects ~= obj;
 	
+	//10 0 obj
 	obj.records = null;
 	obj.stream = null;
 	obj.records ~= pdfRecord("/Type","/FontDescriptor");
@@ -154,13 +184,13 @@ void outputpdf(){
 			fout.writeln("stream");
 			foreach(str;pdfObjects[i].stream){
 				fout.writeln(str);
-				size += str.length + 1;
+				size += str.length + 1; //(文字列の長さ + 改行)
 			}
 			fout.writeln("endstream");
-			size += 17;
+			size += 17; //streamとendstreamの分のbyte数を足す
 		}
 		fout.writeln("endobj");
-		size += 21;
+		size += 21; //n 0 objとかendobjとかのぶん
 	}
 	
 	//相互参照テーブルの書き出し
