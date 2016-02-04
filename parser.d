@@ -12,6 +12,7 @@
 //		1.入力ファイルからコマンド行だけを抽出し処理。この際本文は無視する。
 //		2.入力ファイルから本文だけを抽出。この際コマンド行は無視する。
 //		3.本文から数式を抽出(数式は"[]"内に記述)。
+//		4.本文からサブコマンドを抽出。
 //
 //	#なぜコマンドと本文で実行タイミングを分けるのか
 //		A.コマンド行では本文をPDFに変換するのに必要な情報(例えば用紙サイズやフォントなど)を指定するため、
@@ -21,6 +22,8 @@
 
 import std.stdio;
 import std.string;
+import std.regex;
+import std.conv;
 
 
 void main(){
@@ -36,6 +39,11 @@ void main(){
 
 	string line;
 	string[] command;
+
+	bool mathMode = false;
+	bool subcommandMode = false;
+
+	string subcommand;
 
 	while(!fin.eof){
 		line = fin.readln.chomp;	//.chompで改行コードを除去
@@ -66,16 +74,63 @@ void main(){
 
 	while(!fin.eof){
 		line = fin.readln.chomp;
+		//コマンド行もしくは空行であればスキップ
 		if(line.length == 0){
 			//空行はパラグラフ変更である
-			writeln("this line is empty");
 			continue;
 		}else if(line.length >= 2){
 			if(line[0 .. 2] == "#!"){
 				continue;
 			}
 		}
-		writeln(line);
+
+		//1文字ずつ処理する
+		foreach(str;line){
+			if(subcommandMode == true){
+				if(match(to!string(str),r"[a-z]|[A-Z]")){
+					subcommand ~= str;
+				}else{
+					write("!subcommand: " ~ subcommand ~ "!");
+					subcommand = "";
+					subcommandMode = false;
+
+					if(str == '['){
+						if(mathMode == true){
+							writeln("error! \"[\"in[]");
+						}else{
+							write("!mathModein!");
+							mathMode = true;
+						}
+					}
+				}
+			}else{
+				switch(str){
+					case '[':
+						if(mathMode == true){
+							writeln("error! \"[\"in[]");
+						}else{
+							write("!mathModein!");
+							mathMode = true;
+						}
+						break;
+					case ']':
+						if(mathMode == true){
+							mathMode = false;
+							write("!mathModeout!");
+						}else{
+							writeln("error! \"[\"in[]");
+
+						}
+						break;
+					case '#':
+						subcommandMode = true;
+						break;
+					default:
+						write(str);
+				}
+			}
+		}
+		write("\n");
 	}
 
 
