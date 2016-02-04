@@ -174,6 +174,7 @@ void outputpdf(){
 		distanceFromTop ~= size; //ファイル先端から該当オブジェクトまでのバイト数を格納
 
 		fout.writeln(to!string(i) ~ " 0 obj");
+		size += to!string(i).length; //n 0 objのnの部分のバイト数を足す
 		fout.writeln("<<");
 		foreach(element;pdfObjects[i].records){
 			fout.writeln(element.primary ~ " " ~ element.secondary);
@@ -187,10 +188,10 @@ void outputpdf(){
 				size += str.length + 1; //(文字列の長さ + 改行)
 			}
 			fout.writeln("endstream");
-			size += 17; //streamとendstreamの分のbyte数を足す
+			size += 17; //streamとendstreamの分のバイト数を足す
 		}
 		fout.writeln("endobj");
-		size += 21; //n 0 objとかendobjとかのぶん
+		size += 20; //0 objとかendobjとかのぶん
 	}
 	
 	//相互参照テーブルの書き出し
