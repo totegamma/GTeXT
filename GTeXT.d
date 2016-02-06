@@ -34,6 +34,78 @@ struct pdfRecord{
 	}
 }
 
+class pdfObject{
+	string type;
+
+	pdfObject key;
+	pdfObject value;
+
+	pdfObject[] dictionary;
+
+	pdfObject[] array;
+
+	string stream;
+
+	float number;
+
+	string name;
+
+	string str;
+
+	pdfObject[] object;
+
+	uint refer;
+
+	
+	this(string in0){
+		type = in0;
+	}
+	void setRecoad(pdfObject in0, pdfObject in1){
+		assert(type == "recoad");
+		key = in0;
+		value = in1;
+	}
+	void setDictionary(pdfObject[] in0){
+		assert(type == "dictionary");
+		dictionary = in0;
+	}
+	void setArray(pdfObject[] in0){
+		assert(type == "array");
+		array = in0;
+	}
+	void setStream(string in0){
+		assert(type == "stream");
+		stream = in0;
+	}
+	void setNumber(float in0){
+		assert(type == "number");
+		number = in0;
+
+	}
+	void setName(string in0){
+		assert(type == "name");
+		name = in0;
+	}
+	void setStr(string in0){
+		assert(type == "str");
+		str = in0;
+	}
+	void setObject(pdfObject[] in0){
+		assert(type == "object");
+		object = in0;
+	}
+	void setRefer(uint in0){
+		assert(type == "refer");
+		refer = in0;
+	}
+
+	string outputText(){
+	
+		return "hey";
+	}
+	
+}
+
 struct pdfObject{
 	pdfRecord[] records;
 	string[] stream;
