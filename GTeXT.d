@@ -18,22 +18,16 @@
 //
 
 import std.stdio;
-import std.algorithm.iteration;
-import std.array;
+import core.vararg;
 import std.conv;
-import std.file;
 import std.string;
 
-//ディレクトリの要素の構造体
-struct pdfRecord{
-	string primary, secondary;
+uint size = 15;
+const string outputFile = "output.pdf";
+pdfObject[] pdfObjects;
+uint[] distanceFromTop;
 
-	this(string a, string b){
-		primary = a;
-		secondary = b;
-	}
-}
-
+//pdfを表現する構造体の定義
 class pdfObject{
 	string type;
 
@@ -46,7 +40,7 @@ class pdfObject{
 
 	string stream;
 
-	float number;
+	int number;
 
 	string name;
 
@@ -56,216 +50,243 @@ class pdfObject{
 
 	uint refer;
 
-	
-	this(string in0){
-		type = in0;
-	}
-	void setRecoad(pdfObject in0, pdfObject in1){
-		assert(type == "recoad");
-		key = in0;
-		value = in1;
-	}
-	void setDictionary(pdfObject[] in0){
-		assert(type == "dictionary");
-		dictionary = in0;
-	}
-	void setArray(pdfObject[] in0){
-		assert(type == "array");
-		array = in0;
-	}
-	void setStream(string in0){
-		assert(type == "stream");
-		stream = in0;
-	}
-	void setNumber(float in0){
-		assert(type == "number");
-		number = in0;
 
-	}
-	void setName(string in0){
-		assert(type == "name");
-		name = in0;
-	}
-	void setStr(string in0){
-		assert(type == "str");
-		str = in0;
-	}
-	void setObject(pdfObject[] in0){
-		assert(type == "object");
-		object = in0;
-	}
-	void setRefer(uint in0){
-		assert(type == "refer");
-		refer = in0;
+	this(string in0,...){
+		type = in0;
+		switch(type){
+			case "recoad":
+				key = va_arg!pdfObject(_argptr);
+				value = va_arg!pdfObject(_argptr);
+				break;
+			case "dictionary":
+				dictionary = va_arg!(pdfObject[])(_argptr);
+				break;
+			case "array":
+				array = va_arg!(pdfObject[])(_argptr);
+				break;
+			case "stream":
+				stream = va_arg!string(_argptr);
+				break;
+			case "number":
+				number = va_arg!int(_argptr);
+				break;
+			case "name":
+				name = va_arg!string(_argptr);
+				break;
+			case "str":
+				str = va_arg!string(_argptr);
+				break;
+			case "object":
+				object = va_arg!(pdfObject[])(_argptr);
+				break;
+			case "refer":
+				refer = va_arg!uint(_argptr);
+				break;
+			case "null":
+				break;
+			default:
+				writeln("error!");
+				break;
+		}
 	}
 
 	string outputText(){
-	
-		return "hey";
+		switch(type){
+			case "recoad":
+				return key.outputText() ~ " " ~ value.outputText();
+				break;
+			case "dictionary":
+				string outputstr = "<<\n";
+				foreach(obj;dictionary){
+					outputstr ~= obj.outputText() ~ "\n";
+				}
+				outputstr ~= ">>\n";
+				return outputstr;
+				break;
+			case "array":
+				string outputstr = "[ ";
+				foreach(obj;array){
+					outputstr ~= obj.outputText() ~ " ";
+				}
+				outputstr ~= "]";
+				return outputstr;
+				break;
+			case "stream":
+				return "stream\n" ~ stream ~ "endstream\n";
+				break;
+			case "number":
+				return to!string(number);
+				break;
+			case "name":
+				return "/" ~ name;
+				break;
+			case "str":
+				return "<" ~ str ~ ">";
+				break;
+			case "object":
+				string outputstr;
+				foreach(obj;object[]){
+					outputstr ~= obj.outputText();
+				}
+				size += outputstr.length;
+				return outputstr;
+				break;
+			case "refer":
+				return to!string(refer) ~ " 0 R";
+				break;
+			case "null":
+				return "";
+				break;
+			default:
+				break;
+		}
+		return "error:" ~ type;
 	}
 	
 }
 
-struct pdfObject{
-	pdfRecord[] records;
-	string[] stream;
-}
-
-pdfObject[] pdfObjects;
-int[] distanceFromTop;
-string outputFile;
 
 void main(){
 
-	//出力ファイル名
-	outputFile = "output.pdf";
-
-	//ファイルが存在すれば消す(擬似的な上書き)
-	if(std.file.exists(outputFile) == true){
-		std.file.remove(outputFile);
-	}
-
 	//テスト用にPDFのオブジェクトを手動で追加した
 	//0 0 objは空(プログラムの簡易化のために下駄を履かせた)
-	pdfObject obj;
-	pdfObjects ~= obj;
+	pdfObjects ~= new pdfObject("null");
 
 	//1 0 obj
-	obj.records = null;
-	obj.stream = null;
-	obj.records ~= pdfRecord("/Type","/Catalog");
-	obj.records ~= pdfRecord("/Pages","2 0 R");
-	pdfObjects ~= obj;
+	pdfObjects ~=	new pdfObject("object",[
+						new pdfObject("dictionary",[
+							new pdfObject("recoad",
+								new pdfObject("name","Pages"),
+								new pdfObject("refer",2)
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","Type"),
+								new pdfObject("name","Catalog")
+							)
+						])
+					]);
 
 	//2 0 obj
-	obj.records = null;
-	obj.stream = null;
-	obj.records ~= pdfRecord("/Type","/Pages");
-	obj.records ~= pdfRecord("/Kids","[4 0 R]");
-	obj.records ~= pdfRecord("/Count", "1");
-	pdfObjects ~= obj;
+	pdfObjects ~=	new pdfObject("object",[
+						new pdfObject("dictionary",[
+							new pdfObject("recoad",
+								new pdfObject("name","Type"),
+								new pdfObject("name","Pages")
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","Kids"),
+								new pdfObject("array",[
+									new pdfObject("refer",4)
+								])
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","Count"),
+								new pdfObject("number",1)
+							)
+						])
+					]);
 
 	//3 0 obj
-	obj.records = null;
-	obj.stream = null;
-	obj.records ~= pdfRecord("/Font","6 0 R");
-	pdfObjects ~= obj;
+	pdfObjects ~=	new pdfObject("object",[
+						new pdfObject("dictionary",[
+							new pdfObject("recoad",
+								new pdfObject("name","Font"),
+								new pdfObject("dictionary",[
+									new pdfObject("recoad",
+										new pdfObject("name","F0"),
+										new pdfObject("dictionary",[
+											new pdfObject("recoad",
+												new pdfObject("name","Type"),
+												new pdfObject("name","Font")
+											),
+											new pdfObject("recoad",
+												new pdfObject("name","BaseFont"),
+												new pdfObject("name","Times-Roman")
+											),
+											new pdfObject("recoad",
+												new pdfObject("name","Subtype"),
+												new pdfObject("name","Type1")
+											)
+										])
+									)
+								])
+							)
+						])
+					]);
 
 	//4 0 obj
-	obj.records = null;
-	obj.stream = null;
-	obj.records ~= pdfRecord("/Type","/Page");
-	obj.records ~= pdfRecord("/Parent","2 0 R");
-	obj.records ~= pdfRecord("/Resources","3 0 R");
-	obj.records ~= pdfRecord("/MediaBox","[0 0 595 842]");
-	obj.records ~= pdfRecord("/Contents","5 0 R");
-	pdfObjects ~= obj;
+	pdfObjects ~=	new pdfObject("object",[
+						new pdfObject("dictionary",[
+							new pdfObject("recoad",
+								new pdfObject("name","Type"),
+								new pdfObject("name","Page")
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","Parent"),
+								new pdfObject("refer",2)
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","Resources"),
+								new pdfObject("refer",3)
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","MediaBox"),
+								new pdfObject("array",[
+									new pdfObject("number",0),
+									new pdfObject("number",0),
+									new pdfObject("number",595),
+									new pdfObject("number",842)
+								])
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","Contents"),
+								new pdfObject("refer",5)
+							)
+						])
+					]);
 
 	//5 0 obj
-	obj.records = null;
-	obj.stream = null;
-	obj.records ~= pdfRecord("/Length","58");
-	obj.stream ~= "1. 0. 0. 1. 50. 720. cm"; 
-	obj.stream ~= "BT";
-	obj.stream ~= "/F0 36 Tf";
-	obj.stream ~= "40 TL";
-	obj.stream ~= "<00480065006c006c006f002c0077006f0072006c0064> Tj T*";
-	obj.stream ~= "<005f0028003a0033300d002022200029005f> Tj T*";
-	obj.stream ~= "<65e5672c8a9e3092542b30933060005000440046> Tj";
-	obj.stream ~= "ET";
-	pdfObjects ~= obj;
-
-	//6 0 obj
-	obj.records = null;
-	obj.stream = null;
-	obj.records ~= pdfRecord("/F0","7 0 R");
-	pdfObjects ~= obj;
-
-	//7 0 obj
-	obj.records = null;
-	obj.stream = null;
-	obj.records ~= pdfRecord("/Type","/Font");
-	obj.records ~= pdfRecord("/BaseFont","/KozMinPro6N-Regular");
-	obj.records ~= pdfRecord("/Subtype","/Type0");
-	obj.records ~= pdfRecord("/Encoding","/UniJIS-UTF16-H");
-	obj.records ~= pdfRecord("/DescendantFonts","[8 0 R]");
-	pdfObjects ~= obj;
-
-	//8 0 obj
-	obj.records = null;
-	obj.stream = null;
-	obj.records ~= pdfRecord("/Type","/Font");
-	obj.records ~= pdfRecord("/Subtype","/CIDFontType0");
-	obj.records ~= pdfRecord("/BaseFont","/KozMinPr6N-Regular");
-	obj.records ~= pdfRecord("/CIDSystemInfo","9 0 R");
-	obj.records ~= pdfRecord("/FontDescriptor","10 0 R");
-	pdfObjects ~= obj;
-	
-	//9 0 obj
-	obj.records = null;
-	obj.stream = null;
-	obj.records ~= pdfRecord("/Registry","(Adobe)");
-	obj.records ~= pdfRecord("/Ordering","(Japan1)");
-	obj.records ~= pdfRecord("/Supplement","6");
-	pdfObjects ~= obj;
-	
-	//10 0 obj
-	obj.records = null;
-	obj.stream = null;
-	obj.records ~= pdfRecord("/Type","/FontDescriptor");
-	obj.records ~= pdfRecord("/FontName","/KozMinPro6N-Regular");
-	obj.records ~= pdfRecord("/Flags","4");
-	obj.records ~= pdfRecord("/FontBBox","[-437 -340 1147 1317]");
-	obj.records ~= pdfRecord("/ItalicAngle","0");
-	obj.records ~= pdfRecord("/Ascent","1317");
-	obj.records ~= pdfRecord("/Descent","-349");
-	obj.records ~= pdfRecord("/CapHeight","742");
-	obj.records ~= pdfRecord("/StemV","80");
-	pdfObjects ~= obj;
+	pdfObjects ~=	new pdfObject("object",[
+						new pdfObject("dictionary",[
+							new pdfObject("recoad",
+								new pdfObject("name","Length"),
+								new pdfObject("number",59)
+							)
+						]),
+						new pdfObject("stream",
+							"1. 0. 0. 1. 50. 720. cm\n"
+							~ "BT\n"
+							~ "/F0 36 Tf\n"
+							~ "(Hello, world!) Tj\n"
+							~ "ET\n"
+						)
+					]);
 
 	//PDF書き出し
 	outputpdf();
-
 }
 
 
 void outputpdf(){
 
-	auto fout = File(outputFile,"a");
+	//上書き
+	auto fout = File(outputFile,"w");
 
 	//ヘッダ
 	fout.writeln("%PDF-1.3");
 	fout.write("%");
 	fout.rawWrite([0xE2E3CFD3]); //バイナリファイルであることを明示
 	fout.write("\n");
-	int size = 15; //ヘッダーの分だけ下駄を履かせた
 
 	//オブジェクトの書き出し
-	for(uint i = 1; i < pdfObjects.length; i++){
-
-		distanceFromTop ~= size; //ファイル先端から該当オブジェクトまでのバイト数を格納
-
+	for(uint i = 1;i < pdfObjects.length;i++){
+		distanceFromTop ~= size;
 		fout.writeln(to!string(i) ~ " 0 obj");
-		size += to!string(i).length; //n 0 objのnの部分のバイト数を足す
-		fout.writeln("<<");
-		foreach(element;pdfObjects[i].records){
-			fout.writeln(element.primary ~ " " ~ element.secondary);
-			size += element.primary.length + element.secondary.length + 2; //(文字列の長さ+スペース+改行)
-		}
-		fout.writeln(">>");
-		if(pdfObjects[i].stream != null){ //ストリームがある場合
-			fout.writeln("stream");
-			foreach(str;pdfObjects[i].stream){
-				fout.writeln(str);
-				size += str.length + 1; //(文字列の長さ + 改行)
-			}
-			fout.writeln("endstream");
-			size += 17; //streamとendstreamの分のバイト数を足す
-		}
+		fout.write(pdfObjects[i].outputText());
 		fout.writeln("endobj");
-		size += 20; //0 objとかendobjとかのぶん
+		size += to!string(i).length + 14;
 	}
-	
+
 	//相互参照テーブルの書き出し
 	fout.writeln("xref");
 	fout.writeln("0 " ~ to!string(pdfObjects.length));
@@ -273,6 +294,8 @@ void outputpdf(){
 	foreach(i;distanceFromTop){
 		fout.writeln(rightJustify(to!string(i),10,'0') ~ " 00000 n ");
 	}
+
+	//フッタ
 	fout.writeln("trailer");
 	fout.writeln("<<");
 	fout.writeln("/Size " ~ to!string(pdfObjects.length));
@@ -280,6 +303,6 @@ void outputpdf(){
 	fout.writeln(">>");
 	fout.writeln("startxref");
 	fout.writeln(to!string(size)); //相互参照テーブルまでのバイト数=全てのオブジェクトのバイト数の和
-	fout.writeln("%%eof");
-
+	fout.writeln("%%EOF");
 }
+
