@@ -25,6 +25,14 @@ import std.string;
 import std.regex;
 import std.conv;
 
+struct sentence{
+	string type;
+	string content;
+	this(string in0, string in1){
+		type = in0;
+		content = in1;
+	}
+}
 
 void main(){
 
@@ -40,10 +48,15 @@ void main(){
 	string line;
 	string[] command;
 
+	string currentmode = "normal";
+	string buff;
+
 	bool mathMode = false;
 	bool subcommandMode = false;
 
 	string subcommand;
+
+	sentence[] sentences;
 
 	while(!fin.eof){
 		line = fin.readln.chomp;	//.chompで改行コードを除去
@@ -86,51 +99,60 @@ void main(){
 
 		//1文字ずつ処理する
 		foreach(str;line){
-			if(subcommandMode == true){
-				if(match(to!string(str),r"[a-z]|[A-Z]")){
-					subcommand ~= str;
-				}else{
-					write("!subcommand: " ~ subcommand ~ "!");
-					subcommand = "";
-					subcommandMode = false;
-
-					if(str == '['){
-						if(mathMode == true){
-							writeln("error! \"[\"in[]");
-						}else{
-							write("!mathModein!");
-							mathMode = true;
-						}
+			write(str);
+			switch(currentmode){
+				case "normal":
+					if(str == '#'){
+						sentences ~= sentence("normal",buff);
+						buff = "";
+						currentmode = "command";
+					}else if(str == '['){
+						sentences ~= sentence("normal",buff);
+						buff = "";
+						currentmode = "math";
+					}else{
+						buff ~= str;
 					}
-				}
-			}else{
-				switch(str){
-					case '[':
-						if(mathMode == true){
-							writeln("error! \"[\"in[]");
-						}else{
-							write("!mathModein!");
-							mathMode = true;
-						}
-						break;
-					case ']':
-						if(mathMode == true){
-							mathMode = false;
-							write("!mathModeout!");
-						}else{
-							writeln("error! \"[\"in[]");
-
-						}
-						break;
-					case '#':
-						subcommandMode = true;
-						break;
-					default:
-						write(str);
-				}
+					break;
+				case "command":
+					if(str == '['){
+						sentences ~= sentence("command",buff);
+						buff = "";
+						currentmode = "math";
+					}else if(str == ' '){
+						sentences ~= sentence("command",buff);
+						buff = "";
+						currentmode = "normal";
+					}else{
+						buff ~= str;
+					}
+					break;
+				case "math":
+					if(str == ']'){
+						sentences ~= sentence("math",buff);
+						buff = "";
+						currentmode = "normal";
+					}else{
+						buff ~= str;
+					}
+					break;
+				default:
+					break;
 			}
 		}
-		write("\n");
+		if(currentmode == "command"){
+			sentences ~= sentence("command",buff);
+			buff = "";
+			currentmode = "normal";
+		}
+	}
+
+	sentences ~= sentence(currentmode,buff);
+
+	writeln("--[result]----");
+	writeln(sentences.length);
+	foreach(elem;sentences){
+		writeln(elem.type ~ ": " ~ elem.content);
 	}
 
 
