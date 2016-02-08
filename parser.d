@@ -90,6 +90,11 @@ void main(){
 		//コマンド行もしくは空行であればスキップ
 		if(line.length == 0){
 			//空行はパラグラフ変更である
+			if(buff != ""){
+				sentences ~= sentence("normal",buff);
+				buff = "";
+			}
+			sentences ~= sentence("command","newparagraph");
 			continue;
 		}else if(line.length >= 2){
 			if(line[0 .. 2] == "#!"){
@@ -103,12 +108,16 @@ void main(){
 			switch(currentmode){
 				case "normal":
 					if(str == '#'){
-						sentences ~= sentence("normal",buff);
-						buff = "";
+						if(buff != ""){
+							sentences ~= sentence("normal",buff);
+							buff = "";
+						}
 						currentmode = "command";
 					}else if(str == '['){
-						sentences ~= sentence("normal",buff);
-						buff = "";
+						if(buff != ""){
+							sentences ~= sentence("normal",buff);
+							buff = "";
+						}
 						currentmode = "math";
 					}else{
 						buff ~= str;
@@ -146,8 +155,9 @@ void main(){
 			currentmode = "normal";
 		}
 	}
-
-	sentences ~= sentence(currentmode,buff);
+	if(buff != "")sentences ~= sentence(currentmode,buff);
+	buff = "";
+	currentmode = "normal";
 
 	writeln("--[result]----");
 	writeln(sentences.length);
