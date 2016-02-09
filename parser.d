@@ -41,10 +41,16 @@ void main(){
 
 	auto fin = File(inputFile,"r");
 
-	//PDFのメタ情報を格納する変数
-	string title;
-	string author;
+	//PDFの生成に必要な要素(これを集めるのが目的)
+	string title = "noname";
+	string author = "anonymous";
+	sentence[] sentences;
+	int[4] paperSize = [0, 0, 595, 842]; //a4
+	int[4] padding = [28, 28, 28, 28]; //10mmのパディング
 
+
+
+	//解析に使う変数
 	string line;
 	string[] command;
 
@@ -56,7 +62,6 @@ void main(){
 
 	string subcommand;
 
-	sentence[] sentences;
 
 	while(!fin.eof){
 		line = fin.readln.chomp;	//.chompで改行コードを除去
@@ -104,7 +109,6 @@ void main(){
 
 		//1文字ずつ処理する
 		foreach(str;line){
-			write(str);
 			switch(currentmode){
 				case "normal":
 					if(str == '#'){
@@ -164,6 +168,42 @@ void main(){
 	foreach(elem;sentences){
 		writeln(elem.type ~ ": " ~ elem.content);
 	}
+}
 
+
+string[string] argumentAnalyzer(string in0){
+
+	string[string] argument;
+
+	string keyBuff;
+	string valueBuff;
+
+	const bool readKey = false;
+	const bool readValue = true;
+	bool mode = readKey;
+
+	foreach(str; in0){
+		if(str == ':'){
+			mode = readValue;
+		}else if(str == ','){
+			mode = readKey;
+
+			argument[keyBuff] = valueBuff;
+			keyBuff = "";
+			valueBuff = "";
+
+		}else if(str == ' '){
+			continue; //スペースは無視する
+		}else{
+			if(mode == readKey){
+				keyBuff ~= str;
+			}else{
+				valueBuff ~= str;
+			}
+		}
+	}
+	argument[keyBuff] = valueBuff; //最後には","がないので別途記述
+
+	return argument;
 
 }
