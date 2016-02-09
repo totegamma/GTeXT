@@ -3,3 +3,7 @@ GTeXT.o
 output.pdf
 parser.o
 parser
+tryzlib
+tryzlib.o
+import.pdf
+streamOutput/
