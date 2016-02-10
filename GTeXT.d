@@ -21,11 +21,32 @@ import std.stdio;
 import core.vararg;
 import std.conv;
 import std.string;
+import std.regex;
 
 uint size = 15;
 const string outputFile = "output.pdf";
 pdfObject[] pdfObjects;
 uint[] distanceFromTop;
+int[4][string] paperSizeDictionary;
+
+
+//PDFの生成に必要な要素(これを集めるのが目的)
+string title = "noname";
+string author = "anonymous";
+sentence[] sentences;
+int[4] paperSize = [0, 0, 595, 842]; //a4
+int[4] padding = [28, 28, 28, 28]; //10mmのパディング
+int fontsize = 20;
+
+struct sentence{
+	string type;
+	string content;
+	this(string in0, string in1){
+		type = in0;
+		content = in1;
+	}
+}
+
 
 //pdfを表現する構造体の定義
 class pdfObject{
@@ -148,7 +169,125 @@ class pdfObject{
 
 void main(){
 
-	//テスト用にPDFのオブジェクトを手動で追加した
+	parser();
+	//PDF書き出し
+	outputpdf();
+}
+
+
+void outputpdf(){
+
+	//上書き
+	auto fout = File(outputFile,"w");
+
+	//ヘッダ
+	fout.writeln("%PDF-1.3");
+	fout.write("%");
+	fout.rawWrite([0xE2E3CFD3]); //バイナリファイルであることを明示
+	fout.write("\n");
+
+	//オブジェクトの書き出し
+	for(uint i = 1;i < pdfObjects.length;i++){
+		distanceFromTop ~= size;
+		fout.writeln(to!string(i) ~ " 0 obj");
+		fout.write(pdfObjects[i].outputText());
+		fout.writeln("endobj");
+		size += to!string(i).length + 14;
+	}
+
+	//相互参照テーブルの書き出し
+	fout.writeln("xref");
+	fout.writeln("0 " ~ to!string(pdfObjects.length));
+	fout.writeln("0000000000 65535 f ");
+	foreach(i;distanceFromTop){
+		fout.writeln(rightJustify(to!string(i),10,'0') ~ " 00000 n ");
+	}
+
+	//フッタ
+	fout.writeln("trailer");
+	fout.writeln("<<");
+	fout.writeln("/Size " ~ to!string(pdfObjects.length));
+	fout.writeln("/Root 1 0 R");
+	fout.writeln(">>");
+	fout.writeln("startxref");
+	fout.writeln(to!string(size)); //相互参照テーブルまでのバイト数=全てのオブジェクトのバイト数の和
+	fout.writeln("%%EOF");
+}
+
+void parser(){
+
+	//デバッグを素早く行うため入力ファイル名はあらかじめ記入しておいた
+	string inputFile = "input.gt";
+
+	auto fin = File(inputFile,"r");
+
+	//解析に使う変数
+	string line;
+	string currentmode = "normal";
+	string buff;
+	string precommand;
+	string argument;
+
+	bool beforeArgument = true;
+
+	paperSizeDictionary = ["a4":[0,0,595,842]];
+
+
+	while(!fin.eof){
+		line = fin.readln.chomp;	//.chompで改行コードを除去
+		if(line.length >= 2){
+			if(line[0 .. 2] == "#!"){
+				//コマンド行
+				line = line[2 .. $];
+				foreach(str; line){
+					if(beforeArgument == true){
+						if(str == '('){
+							beforeArgument = false;
+						}else{
+							precommand ~= str;
+						}
+					}else{
+						if(str == ')'){
+							auto argDict = argumentAnalyzer(argument);
+							switch(precommand){
+								case "title":
+									title = argDict["_default_"];
+									break;
+								case "author":
+									author = argDict["_default_"];
+									break;
+								case "paperSize":
+									writeln(argDict);
+									if("_default_" in argDict){
+										paperSize = paperSizeDictionary[argDict["_default_"]];
+									}else{
+										paperSize = [0,0,to!int(argDict["width"]),to!int(argDict["height"])];
+									}
+									break;
+								case "padding":
+									if("_default_" in argDict){
+										int pad = to!int(argDict["_default_"]);
+										padding = [pad,pad,pad,pad];
+									}else{
+										padding = [to!int(argDict["left"]),to!int(argDict["right"]),to!int(argDict["down"]),to!int(argDict["up"])];
+									}
+									break;
+								default:
+									writeln("Error! unknown precommand: " ~ precommand);
+									break;
+							}
+							precommand = "";
+							argument = "";
+							beforeArgument = true;
+						}else{
+							argument ~= str;
+						}
+					}
+				}
+				
+			}
+		}
+	}
 	//0 0 objは空(プログラムの簡易化のために下駄を履かせた)
 	pdfObjects ~= new pdfObject("null");
 
@@ -232,10 +371,10 @@ void main(){
 							new pdfObject("recoad",
 								new pdfObject("name","MediaBox"),
 								new pdfObject("array",[
-									new pdfObject("number",0),
-									new pdfObject("number",0),
-									new pdfObject("number",595),
-									new pdfObject("number",842)
+									new pdfObject("number",paperSize[0]),
+									new pdfObject("number",paperSize[1]),
+									new pdfObject("number",paperSize[2]),
+									new pdfObject("number",paperSize[3])
 								])
 							),
 							new pdfObject("recoad",
@@ -245,64 +384,158 @@ void main(){
 						])
 					]);
 
+//--------------------------------------------------------------
+
+
+
+	//ファイル読み込みのシーカーを頭に戻す
+	fin.rewind();
+
+	while(!fin.eof){
+		line = fin.readln.chomp;
+		//コマンド行もしくは空行であればスキップ
+		if(line.length == 0){
+			//空行はパラグラフ変更である
+			if(buff != ""){
+				sentences ~= sentence("normal",buff);
+				buff = "";
+			}
+			sentences ~= sentence("command","newparagraph");
+			continue;
+		}else if(line.length >= 2){
+			if(line[0 .. 2] == "#!"){
+				continue;
+			}
+		}
+
+		//1文字ずつ処理する
+		foreach(str;line){
+			switch(currentmode){
+				case "normal":
+					if(str == '#'){
+						if(buff != ""){
+							sentences ~= sentence("normal",buff);
+							buff = "";
+						}
+						currentmode = "command";
+					}else if(str == '['){
+						if(buff != ""){
+							sentences ~= sentence("normal",buff);
+							buff = "";
+						}
+						currentmode = "math";
+					}else{
+						buff ~= str;
+					}
+					break;
+				case "command":
+					if(str == '['){
+						sentences ~= sentence("command",buff);
+						buff = "";
+						currentmode = "math";
+					}else if(str == ' '){
+						sentences ~= sentence("command",buff);
+						buff = "";
+						currentmode = "normal";
+					}else{
+						buff ~= str;
+					}
+					break;
+				case "math":
+					if(str == ']'){
+						sentences ~= sentence("math",buff);
+						buff = "";
+						currentmode = "normal";
+					}else{
+						buff ~= str;
+					}
+					break;
+				default:
+					break;
+			}
+		}
+		if(currentmode == "command"){
+			sentences ~= sentence("command",buff);
+			buff = "";
+			currentmode = "normal";
+		}
+	}
+	if(buff != "")sentences ~= sentence(currentmode,buff);
+	buff = "";
+	currentmode = "normal";
+
+	string streamBuff;
+
+	streamBuff ~= "1. 0. 0. 1. " ~ to!string(padding[0]) ~ ". " ~ to!string(paperSize[3] - padding[3] - fontsize) ~ ". cm\n";
+	streamBuff ~= "BT\n";
+	streamBuff ~= "/F0 " ~ to!string(fontsize) ~ " Tf\n";
+	streamBuff ~= to!string(fontsize + 4) ~ " TL\n";
+
+	string stringbuff;
+	foreach(elem;sentences){
+		if(elem.type == "normal"){
+			stringbuff ~= elem.content;
+		}else if(elem.type == "command" && elem.content == "newparagraph"){
+			streamBuff ~= "(" ~ stringbuff ~ ") Tj T*\n";
+			stringbuff = "";
+		}
+	}
+
+	streamBuff ~= "ET\n";
+
 	//5 0 obj
 	pdfObjects ~=	new pdfObject("object",[
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Length"),
-								new pdfObject("number",59)
+								new pdfObject("number",streamBuff.length)
 							)
 						]),
-						new pdfObject("stream",
-							"1. 0. 0. 1. 50. 720. cm\n"
-							~ "BT\n"
-							~ "/F0 36 Tf\n"
-							~ "(Hello, world!) Tj\n"
-							~ "ET\n"
-						)
+						new pdfObject("stream",streamBuff)
 					]);
 
-	//PDF書き出し
-	outputpdf();
+
+
 }
 
+string[string] argumentAnalyzer(string in0){
 
-void outputpdf(){
-
-	//上書き
-	auto fout = File(outputFile,"w");
-
-	//ヘッダ
-	fout.writeln("%PDF-1.3");
-	fout.write("%");
-	fout.rawWrite([0xE2E3CFD3]); //バイナリファイルであることを明示
-	fout.write("\n");
-
-	//オブジェクトの書き出し
-	for(uint i = 1;i < pdfObjects.length;i++){
-		distanceFromTop ~= size;
-		fout.writeln(to!string(i) ~ " 0 obj");
-		fout.write(pdfObjects[i].outputText());
-		fout.writeln("endobj");
-		size += to!string(i).length + 14;
+	if(indexOf(in0,",") == -1){
+		return ["_default_":in0];
 	}
 
-	//相互参照テーブルの書き出し
-	fout.writeln("xref");
-	fout.writeln("0 " ~ to!string(pdfObjects.length));
-	fout.writeln("0000000000 65535 f ");
-	foreach(i;distanceFromTop){
-		fout.writeln(rightJustify(to!string(i),10,'0') ~ " 00000 n ");
-	}
 
-	//フッタ
-	fout.writeln("trailer");
-	fout.writeln("<<");
-	fout.writeln("/Size " ~ to!string(pdfObjects.length));
-	fout.writeln("/Root 1 0 R");
-	fout.writeln(">>");
-	fout.writeln("startxref");
-	fout.writeln(to!string(size)); //相互参照テーブルまでのバイト数=全てのオブジェクトのバイト数の和
-	fout.writeln("%%EOF");
+	string[string] argument;
+
+	string keyBuff;
+	string valueBuff;
+
+	const bool readKey = false;
+	const bool readValue = true;
+	bool mode = readKey;
+
+	foreach(str; in0){
+		if(str == ':'){
+			mode = readValue;
+		}else if(str == ','){
+			mode = readKey;
+
+			argument[keyBuff] = valueBuff;
+			keyBuff = "";
+			valueBuff = "";
+
+		}else if(str == ' '){
+			continue; //スペースは無視する
+		}else{
+			if(mode == readKey){
+				keyBuff ~= str;
+			}else{
+				valueBuff ~= str;
+			}
+		}
+	}
+	argument[keyBuff] = valueBuff; //最後には","がないので別途記述
+
+	return argument;
+
 }
-
