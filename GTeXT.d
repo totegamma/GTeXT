@@ -257,7 +257,6 @@ void parser(){
 									author = argDict["_default_"];
 									break;
 								case "paperSize":
-									writeln(argDict);
 									if("_default_" in argDict){
 										paperSize = paperSizeDictionary[argDict["_default_"]];
 									}else{
@@ -266,10 +265,10 @@ void parser(){
 									break;
 								case "padding":
 									if("_default_" in argDict){
-										int pad = to!int(argDict["_default_"]);
+										int pad = mmTOpt(to!int(argDict["_default_"]));
 										padding = [pad,pad,pad,pad];
 									}else{
-										padding = [to!int(argDict["left"]),to!int(argDict["right"]),to!int(argDict["down"]),to!int(argDict["up"])];
+										padding = [mmTOpt(to!int(argDict["left"])),mmTOpt(to!int(argDict["right"])),mmTOpt(to!int(argDict["down"])),mmTOpt(to!int(argDict["up"]))];
 									}
 									break;
 								default:
@@ -475,9 +474,17 @@ void parser(){
 	foreach(elem;sentences){
 		if(elem.type == "normal"){
 			stringbuff ~= elem.content;
-		}else if(elem.type == "command" && elem.content == "newparagraph"){
-			streamBuff ~= "(" ~ stringbuff ~ ") Tj T*\n";
-			stringbuff = "";
+		}else if(elem.type == "command"){
+			switch(elem.content){
+				case "newparagraph":
+					streamBuff ~= "(" ~ stringbuff ~ ") Tj T*\n";
+					stringbuff = "";
+					break;
+				case "pi":
+					stringbuff ~= "π";
+				default:
+					break;
+			}
 		}
 	}
 
@@ -500,7 +507,7 @@ void parser(){
 
 string[string] argumentAnalyzer(string in0){
 
-	if(indexOf(in0,",") == -1){
+	if(indexOf(in0,":") == -1){
 		return ["_default_":in0];
 	}
 
@@ -538,4 +545,8 @@ string[string] argumentAnalyzer(string in0){
 
 	return argument;
 
+}
+
+int mmTOpt(int in0){
+	return to!int(in0 * 2.834);
 }
