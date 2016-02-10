@@ -1,5 +1,7 @@
-#!title hogehoge
-#!author piyopiyo
+#!title(hogehoge)
+#!author(piyopiyo)
+#!paperSize(a4)
+#!padding(10)
 Hello,world!
 
 Tomorrow, and tomorrow, and tomorrow

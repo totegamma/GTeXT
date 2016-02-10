@@ -9,14 +9,14 @@
 //		完成したら本体とマージする予定
 //
 //	#コードの流れ:
-//		1.入力ファイルからコマンド行だけを抽出し処理。この際本文は無視する。
-//		2.入力ファイルから本文だけを抽出。この際コマンド行は無視する。
+//		1.入力ファイルからプリコマンド行だけを抽出し処理。この際本文は無視する。
+//		2.入力ファイルから本文だけを抽出。この際プリコマンド行は無視する。
 //		3.本文から数式を抽出(数式は"[]"内に記述)。
-//		4.本文からサブコマンドを抽出。
+//		4.本文からコマンドを抽出。
 //
-//	#なぜコマンドと本文で実行タイミングを分けるのか
-//		A.コマンド行では本文をPDFに変換するのに必要な情報(例えば用紙サイズやフォントなど)を指定するため、
-//			先に全てのコマンド行を捜査するため。
+//	#なぜプリコマンドと本文で解析の実行タイミングを分けるのか
+//		A.プリコマンド行では本文をPDFに変換するのに必要な情報(例えば用紙サイズやフォントなど)を指定するため、
+//			先に全てのプリコマンド行を捜査するため。
 //
 
 
@@ -24,6 +24,10 @@ import std.stdio;
 import std.string;
 import std.regex;
 import std.conv;
+
+int[4][string] paperSizeDictionary;
+
+
 
 struct sentence{
 	string type;
@@ -49,18 +53,16 @@ void main(){
 	int[4] padding = [28, 28, 28, 28]; //10mmのパディング
 
 
-
 	//解析に使う変数
 	string line;
-	string[] command;
-
 	string currentmode = "normal";
 	string buff;
+	string precommand;
+	string argument;
 
-	bool mathMode = false;
-	bool subcommandMode = false;
+	bool beforeArgument = true;
 
-	string subcommand;
+	paperSizeDictionary = ["a4":[0,0,595,842]];
 
 
 	while(!fin.eof){
@@ -69,16 +71,52 @@ void main(){
 			if(line[0 .. 2] == "#!"){
 				//コマンド行
 				line = line[2 .. $];
-				command = line.split(" ");
-				switch(command[0]){
-					case "title":
-						title = command[1];
-						break;
-					case "author":
-						author = command[1];
-						break;
-					default:
+				foreach(str; line){
+					if(beforeArgument == true){
+						if(str == '('){
+							beforeArgument = false;
+						}else{
+							precommand ~= str;
+						}
+					}else{
+						if(str == ')'){
+							auto argDict = argumentAnalyzer(argument);
+							switch(precommand){
+								case "title":
+									title = argDict["_default_"];
+									break;
+								case "author":
+									author = argDict["_default_"];
+									break;
+								case "paperSize":
+									writeln(argDict);
+									if("_default_" in argDict){
+										paperSize = paperSizeDictionary[argDict["_default_"]];
+									}else{
+										paperSize = [0,0,to!int(argDict["width"]),to!int(argDict["height"])];
+									}
+									break;
+								case "padding":
+									if("_default_" in argDict){
+										int pad = to!int(argDict["_default_"]);
+										padding = [pad,pad,pad,pad];
+									}else{
+										padding = [to!int(argDict["left"]),to!int(argDict["right"]),to!int(argDict["down"]),to!int(argDict["up"])];
+									}
+									break;
+								default:
+									writeln("Error! unknown precommand: " ~ precommand);
+									break;
+							}
+							precommand = "";
+							argument = "";
+							beforeArgument = true;
+						}else{
+							argument ~= str;
+						}
+					}
 				}
+				
 			}
 		}
 	}
@@ -86,6 +124,8 @@ void main(){
 	//デバッグのため出力
 	writeln("title: " ~ title);
 	writeln("author: " ~ author);
+	writeln(paperSize);
+	writeln(padding);
 
 	//ファイル読み込みのシーカーを頭に戻す
 	fin.rewind();
@@ -172,6 +212,11 @@ void main(){
 
 
 string[string] argumentAnalyzer(string in0){
+
+	if(indexOf(in0,",") == -1){
+		return ["_default_":in0];
+	}
+
 
 	string[string] argument;
 
