@@ -51,6 +51,7 @@ void main(){
 	sentence[] sentences;
 	int[4] paperSize = [0, 0, 595, 842]; //a4
 	int[4] padding = [28, 28, 28, 28]; //10mmのパディング
+	int fontsize = 20;
 
 
 	//解析に使う変数
@@ -203,11 +204,30 @@ void main(){
 	buff = "";
 	currentmode = "normal";
 
-	writeln("--[result]----");
+	writeln("---[result]----");
 	writeln(sentences.length);
 	foreach(elem;sentences){
 		writeln(elem.type ~ ": " ~ elem.content);
 	}
+
+	writeln("---[stream]---");
+	writeln("1. 0. 0. 1. " ~ to!string(padding[0]) ~ ". " ~ to!string(paperSize[3] - padding[3] - fontsize) ~ ". cm");
+	writeln("BT");
+	writeln("/F0 " ~ to!string(fontsize) ~ " Tf");
+	writeln( to!string(fontsize + 4) ~ " TL");
+
+	string stringbuff;
+	foreach(elem;sentences){
+		if(elem.type == "normal"){
+			stringbuff ~= elem.content;
+		}else if(elem.type == "command" && elem.content == "newparagraph"){
+			writeln("(" ~ stringbuff ~ ") Tj T*");
+			stringbuff = "";
+		}
+	}
+
+	writeln("ET");
+
 }
 
 

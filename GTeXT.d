@@ -145,45 +145,8 @@ class pdfObject{
 	
 }
 
-void makePDFobjects(){
 
-	//デバッグを素早く行うため入力ファイル名はあらかじめ記入しておいた
-	string inputFile = "input.gt";
-
-	auto fin = File(inputFile,"r");
-
-	//PDFのメタ情報を格納する変数
-	string title;
-	string author;
-
-	string line;
-	string[] command;
-
-	bool mathMode = false;
-	bool subcommandMode = false;
-
-	string subcommand;
-
-	while(!fin.eof){
-		line = fin.readln.chomp;	//.chompで改行コードを除去
-		if(line.length >= 2){
-			if(line[0 .. 2] == "#!"){
-				//コマンド行
-				line = line[2 .. $];
-				command = line.split(" ");
-				switch(command[0]){
-					case "title":
-						title = command[1];
-						break;
-					case "author":
-						author = command[1];
-						break;
-					default:
-				}
-			}
-		}
-	}
-
+void main(){
 
 	//テスト用にPDFのオブジェクトを手動で追加した
 	//0 0 objは空(プログラムの簡易化のために下駄を履かせた)
@@ -250,6 +213,7 @@ void makePDFobjects(){
 							)
 						])
 					]);
+
 	//4 0 obj
 	pdfObjects ~=	new pdfObject("object",[
 						new pdfObject("dictionary",[
@@ -281,52 +245,23 @@ void makePDFobjects(){
 						])
 					]);
 
-	//ファイル読み込みのシーカーを頭に戻す
-	fin.rewind();
-	string content =	"1. 0. 0. 1. 50. 720. cm\n"
-						~ "BT\n"
-						~ "/F0 36 Tf\n"
-						~ "(";
-
-
-		;
-	while(!fin.eof){
-		line = fin.readln.chomp;
-		//コマンド行もしくは空行であればスキップ
-		if(line.length == 0){
-			//空行はパラグラフ変更である
-			content ~= "\n";
-			continue;
-		}else if(line.length >= 2){
-			if(line[0 .. 2] == "#!"){
-				continue;
-			}
-		}
-		content ~= line;
-	}
-
-	content		~= ") Tj \n"
-				~ "ET\n";
-
 	//5 0 obj
 	pdfObjects ~=	new pdfObject("object",[
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Length"),
-								new pdfObject("number",content.length)
+								new pdfObject("number",59)
 							)
 						]),
-						new pdfObject("stream",content)
+						new pdfObject("stream",
+							"1. 0. 0. 1. 50. 720. cm\n"
+							~ "BT\n"
+							~ "/F0 36 Tf\n"
+							~ "(Hello, world!) Tj\n"
+							~ "ET\n"
+						)
 					]);
 
-
-
-}
-
-
-void main(){
-
-	makePDFobjects();
 	//PDF書き出し
 	outputpdf();
 }
