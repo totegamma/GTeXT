@@ -10,3 +10,5 @@ streamOutput/
 物置/
 loadcmap.o
 loadcmap
+
+*.o

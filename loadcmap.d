@@ -3,6 +3,7 @@ import std.string;
 import std.conv;
 import std.format;
 import std.array;
+import std.utf;
 
 void main(){
 	string line;
@@ -31,7 +32,6 @@ void main(){
 			string uni = sentences[0][1..$-1];
 			string cid = sentences[1];
 			cmap[to!uint(uni,16)] = to!uint(cid);
-			//writeln(uni ~ " : " ~ cid);
 		}else if(loadRange == true){
 			if(line == "endcidrange"){
 				loadRange = false;
@@ -45,12 +45,20 @@ void main(){
 			uint cidStart = parse!uint(sentences[2]);
 			for(; rangeStart <= rangeEnd; rangeStart++){
 				cmap[rangeStart] = cidStart;
-				//auto writer = appender!string();
-				//formattedWrite(writer,"%x",rangeStart);
-				//writeln(writer.data ~ " : " ~ to!string(cidStart));
 				cidStart ++;
 			}
 		}
 	}
-	writeln(cmap);
+	string input = "これはタイトルです";
+	auto writer = appender!string();
+	foreach(c; array(input)) {
+		foreach(b; [c].toUTF8) {
+			formattedWrite(writer,"%x",b);
+		}
+	uint unicode = to!uint(writer.data,16);
+	writer = appender!string();
+	formattedWrite(writer,"%x",cmap[unicode]);
+	writeln(rightJustify(writer.data,4,'0'));
+	writer = appender!string();
+	}
 }
