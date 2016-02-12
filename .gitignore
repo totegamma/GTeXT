@@ -8,5 +8,5 @@ tryzlib.o
 import.pdf
 streamOutput/
 物置/
-loadcmap.d
+loadcmap.o
 loadcmap
