@@ -147,7 +147,7 @@ class pdfObject{
 				return "/" ~ name;
 				break;
 			case "str":
-				return "<" ~ str ~ ">";
+				return "(" ~ str ~ ")";
 				break;
 			case "object":
 				string outputstr;
@@ -174,6 +174,7 @@ class pdfObject{
 
 void main(){
 
+	loadcmap();
 	parser();
 	//PDF書き出し
 	outputpdf();
@@ -212,7 +213,8 @@ void outputpdf(){
 	fout.writeln("trailer");
 	fout.writeln("<<");
 	fout.writeln("/Size " ~ to!string(pdfObjects.length));
-	fout.writeln("/Root 1 0 R");
+	fout.writeln("/Info 1 0 R");
+	fout.writeln("/Root 2 0 R");
 	fout.writeln(">>");
 	fout.writeln("startxref");
 	fout.writeln(to!string(size)); //相互参照テーブルまでのバイト数=全てのオブジェクトのバイト数の和
@@ -293,13 +295,31 @@ void parser(){
 	}
 	//0 0 objは空(プログラムの簡易化のために下駄を履かせた)
 	pdfObjects ~= new pdfObject("null");
+	
+	//1 0 obj Info
+	pdfObjects ~=	new pdfObject("object",[
+						new pdfObject("dictionary",[
+							new pdfObject("recoad",
+								new pdfObject("name","Title"),
+								new pdfObject("str",title)
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","Author"),
+								new pdfObject("str",author)
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","Creator"),
+								new pdfObject("str","GTeXT")
+							)
+						])
+					]);
 
-	//1 0 obj
+	//2 0 obj Root
 	pdfObjects ~=	new pdfObject("object",[
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Pages"),
-								new pdfObject("refer",2)
+								new pdfObject("refer",3)
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","Type"),
@@ -308,7 +328,7 @@ void parser(){
 						])
 					]);
 
-	//2 0 obj
+	//3 0 obj
 	pdfObjects ~=	new pdfObject("object",[
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
@@ -328,7 +348,37 @@ void parser(){
 						])
 					]);
 
-	//3 0 obj
+	//4 0 obj
+	pdfObjects ~=	new pdfObject("object",[
+						new pdfObject("dictionary",[
+							new pdfObject("recoad",
+								new pdfObject("name","Type"),
+								new pdfObject("name","Page")
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","Parent"),
+								new pdfObject("refer",3)
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","Resources"),
+								new pdfObject("refer",5)
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","MediaBox"),
+								new pdfObject("array",[
+									new pdfObject("number",paperSize[0]),
+									new pdfObject("number",paperSize[1]),
+									new pdfObject("number",paperSize[2]),
+									new pdfObject("number",paperSize[3])
+								])
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","Contents"),
+								new pdfObject("refer",8)
+							)
+						])
+					]);
+	//5 0 obj
 	pdfObjects ~=	new pdfObject("object",[
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
@@ -343,11 +393,21 @@ void parser(){
 											),
 											new pdfObject("recoad",
 												new pdfObject("name","BaseFont"),
-												new pdfObject("name","Times-Roman")
+												new pdfObject("name","KozMinPro6N-Regular")
 											),
 											new pdfObject("recoad",
 												new pdfObject("name","Subtype"),
-												new pdfObject("name","Type1")
+												new pdfObject("name","Type0")
+											),
+											new pdfObject("recoad",
+												new pdfObject("name","Encoding"),
+												new pdfObject("name","Identity-H")
+											),
+											new pdfObject("recoad",
+												new pdfObject("name","DescendantFonts"),
+												new pdfObject("array",[
+													new pdfObject("refer",6)
+												])
 											)
 										])
 									)
@@ -355,37 +415,91 @@ void parser(){
 							)
 						])
 					]);
-
-	//4 0 obj
+	//6 0 obj
 	pdfObjects ~=	new pdfObject("object",[
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Type"),
-								new pdfObject("name","Page")
+								new pdfObject("name","Font")
 							),
 							new pdfObject("recoad",
-								new pdfObject("name","Parent"),
-								new pdfObject("refer",2)
+								new pdfObject("name","Subtype"),
+								new pdfObject("name","CIDFontType0")
 							),
 							new pdfObject("recoad",
-								new pdfObject("name","Resources"),
-								new pdfObject("refer",3)
+								new pdfObject("name","BaseFont"),
+								new pdfObject("name","KozMinPr6N-Regular")
 							),
 							new pdfObject("recoad",
-								new pdfObject("name","MediaBox"),
-								new pdfObject("array",[
-									new pdfObject("number",paperSize[0]),
-									new pdfObject("number",paperSize[1]),
-									new pdfObject("number",paperSize[2]),
-									new pdfObject("number",paperSize[3])
+								new pdfObject("name","CIDSystemInfo"),
+								new pdfObject("dictionary",[
+									new pdfObject("recoad",
+										new pdfObject("name","Registry"),
+										new pdfObject("str","Adobe")
+									),
+									new pdfObject("recoad",
+										new pdfObject("name","Ordering"),
+										new pdfObject("str","Japan1")
+									),
+									new pdfObject("recoad",
+										new pdfObject("name","Supplement"),
+										new pdfObject("number",6)
+									)
 								])
 							),
 							new pdfObject("recoad",
-								new pdfObject("name","Contents"),
-								new pdfObject("refer",5)
+								new pdfObject("name","FontDescriptor"),
+								new pdfObject("refer",7)
 							)
 						])
 					]);
+	//7 0 obj
+	pdfObjects ~=	new pdfObject("object",[
+						new pdfObject("dictionary",[
+							new pdfObject("recoad",
+								new pdfObject("name","Type"),
+								new pdfObject("name","FontDescriptor")
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","FontName"),
+								new pdfObject("name","KozMinPr6N-Regular")
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","Flags"),
+								new pdfObject("number",4)
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","FontBBox"),
+								new pdfObject("array",[
+									new pdfObject("number",-437),
+									new pdfObject("number",-340),
+									new pdfObject("number",1147),
+									new pdfObject("number",1317)
+								])
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","ItalicAngle"),
+								new pdfObject("number",0)
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","Ascent"),
+								new pdfObject("number",1317)
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","Descent"),
+								new pdfObject("number",-349)
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","CapHeight"),
+								new pdfObject("number",742)
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","StemV"),
+								new pdfObject("number",80)
+							)
+						])
+					]);
+	
 
 //--------------------------------------------------------------
 
@@ -481,7 +595,7 @@ void parser(){
 		}else if(elem.type == "command"){
 			switch(elem.content){
 				case "newparagraph":
-					streamBuff ~= "(" ~ stringbuff ~ ") Tj T*\n";
+					streamBuff ~= "<" ~ string2cid(stringbuff) ~ "> Tj T*\n";
 					stringbuff = "";
 					break;
 				case "pi":
@@ -494,7 +608,7 @@ void parser(){
 
 	streamBuff ~= "ET\n";
 
-	//5 0 obj
+	//8 0 obj
 	pdfObjects ~=	new pdfObject("object",[
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
