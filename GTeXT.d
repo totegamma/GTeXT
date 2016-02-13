@@ -22,12 +22,17 @@ import core.vararg;
 import std.conv;
 import std.string;
 import std.regex;
+import std.format;
+import std.array;
+import std.utf;
 
 uint size = 15;
 const string outputFile = "output.pdf";
 pdfObject[] pdfObjects;
 uint[] distanceFromTop;
 int[4][string] paperSizeDictionary;
+
+uint[uint] cmap;
 
 
 //PDFの生成に必要な要素(これを集めるのが目的)
@@ -283,7 +288,6 @@ void parser(){
 						}
 					}
 				}
-				
 			}
 		}
 	}
@@ -549,4 +553,64 @@ string[string] argumentAnalyzer(string in0){
 
 int mmTOpt(int in0){
 	return to!int(in0 * 2.834);
+}
+
+string string2cid(string in0){
+	auto writer = appender!string();
+	string output;
+	foreach(c; array(in0)) {
+		foreach(b; [c].toUTF8) {
+			formattedWrite(writer,"%x",b);
+		}
+	uint unicode = to!uint(writer.data,16);
+	writer = appender!string();
+	formattedWrite(writer,"%x",cmap[unicode]);
+	//writeln(rightJustify(writer.data,4,'0'));
+	output ~= rightJustify(writer.data,4,'0');
+	writer = appender!string();
+	}
+	return output;
+}
+
+void loadcmap(){
+	string line;
+	string[] sentences;
+	bool loadChar = false;
+	bool loadRange = false;
+
+	auto fin = File("resources/cmap/UniJIS2004-UTF8-H.txt","r");
+	while(!fin.eof){
+		line = fin.readln.chomp;
+		if(loadChar == false && loadRange == false){
+			if(indexOf(line,"begincidchar") != -1){
+				loadChar = true;
+			}else if(indexOf(line, "begincidrange") != -1){
+				loadRange = true;
+			}
+		}else if(loadChar == true){
+			if(line == "endcidchar"){
+				loadChar = false;
+				continue;
+			}
+			sentences = split(line," ");
+			string uni = sentences[0][1..$-1];
+			string cid = sentences[1];
+			cmap[to!uint(uni,16)] = to!uint(cid);
+		}else if(loadRange == true){
+			if(line == "endcidrange"){
+				loadRange = false;
+				continue;
+			}
+			sentences = split(line," ");
+			string rangeStartStr = sentences[0][1..$-1];
+			string rangeEndStr = sentences[1][1..$-1];
+			uint rangeStart = parse!uint(rangeStartStr,16);
+			uint rangeEnd = parse!uint(rangeEndStr,16);
+			uint cidStart = parse!uint(sentences[2]);
+			for(; rangeStart <= rangeEnd; rangeStart++){
+				cmap[rangeStart] = cidStart;
+				cidStart ++;
+			}
+		}
+	}
 }
