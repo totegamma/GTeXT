@@ -3,6 +3,10 @@ import std.zlib;
 import std.conv;
 
 void main(){
+	encode();
+}
+
+void decode(){
 	string line;
 	bool instream;
 	string buff;
@@ -32,4 +36,9 @@ void main(){
 	}
 
 
+}
+
+void encode(){
+	string input = "boboboo";
+	write(to!string(compress(input)));
 }

@@ -589,14 +589,27 @@ void parser(){
 	streamBuff ~= to!string(fontsize + 4) ~ " TL\n";
 
 	string stringbuff;
+	uint width;
 	foreach(elem;sentences){
 		if(elem.type == "normal"){
-			stringbuff ~= elem.content;
+			foreach(str;array(elem.content)){
+				width += fontsize;
+				if(width > paperSize[2] - padding[0] - padding[1]){
+					streamBuff ~= "<" ~ string2cid(stringbuff) ~ "> Tj T*\n";
+					stringbuff = "";
+					width = 0;
+					stringbuff ~= str;
+				}else{
+					stringbuff ~= str;
+				}
+			}
+			
+
 		}else if(elem.type == "command"){
 			switch(elem.content){
 				case "newparagraph":
-					streamBuff ~= "<" ~ string2cid(stringbuff) ~ "> Tj T*\n";
-					stringbuff = "";
+					//streamBuff ~= "<" ~ string2cid(stringbuff) ~ "> Tj T*\n";
+					//stringbuff = "";
 					break;
 				case "pi":
 					stringbuff ~= "π";
@@ -670,6 +683,9 @@ int mmTOpt(int in0){
 }
 
 string string2cid(string in0){
+	if(in0 == ""){
+		return "";
+	}
 	auto writer = appender!string();
 	string output;
 	foreach(c; array(in0)) {
