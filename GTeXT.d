@@ -552,7 +552,7 @@ void parser(){
 						currentmode = "math";
 					}else if(str == ' '){
 						sentences ~= sentence("command",buff);
-						buff = "";
+						buff = " ";
 						currentmode = "normal";
 					}else{
 						buff ~= str;
@@ -608,8 +608,9 @@ void parser(){
 		}else if(elem.type == "command"){
 			switch(elem.content){
 				case "newparagraph":
-					//streamBuff ~= "<" ~ string2cid(stringbuff) ~ "> Tj T*\n";
-					//stringbuff = "";
+					streamBuff ~= "<" ~ string2cid(stringbuff) ~ "> Tj T*\n";
+					stringbuff = "";
+					width = 0;
 					break;
 				case "pi":
 					stringbuff ~= "π";
