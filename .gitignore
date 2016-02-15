@@ -7,5 +7,6 @@ streamOutput/
 物置/
 loadcmap
 fontanalyzer
+resources/fonts/
 
 *.o
