@@ -393,7 +393,7 @@ void parser(){
 											),
 											new pdfObject("recoad",
 												new pdfObject("name","BaseFont"),
-												new pdfObject("name","KozMinPro6N-Regular")
+												new pdfObject("name","KozGoPr6N-Medium")
 											),
 											new pdfObject("recoad",
 												new pdfObject("name","Subtype"),
@@ -428,7 +428,7 @@ void parser(){
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","BaseFont"),
-								new pdfObject("name","KozMinPr6N-Regular")
+								new pdfObject("name","KozGoPr6N-Medium")
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","CIDSystemInfo"),
@@ -462,7 +462,7 @@ void parser(){
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","FontName"),
-								new pdfObject("name","KozMinPr6N-Regular")
+								new pdfObject("name","KozGoPr6N-Medium")
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","Flags"),
