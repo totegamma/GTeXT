@@ -4,9 +4,15 @@ import std.format;
 import std.array;
 
 void main(){
-	ubyte[4] a = trim(0,4);
-	writeln(array2uint(a));
-	writeln(array2string(a));
+	writeln("ファイル識別子: " ~ array2string(trim(0,4)));
+	int numOfTable = array2uint(trim(4,2));
+	writeln("テーブルの数: " ~ to!string(numOfTable));
+	for(int i; i<numOfTable; i++){
+		writeln("テーブル名: " ~ array2string(trim(12 +16*i, 4)));
+		writeln("\tチェックサム: " ~ to!string(array2uint(trim(16 +16*i, 4))));
+		writeln("\tオフセット: " ~ to!string(array2uint(trim(20 +16*i, 4))));
+		writeln("\tデータ長: " ~ to!string(array2uint(trim(24 +16*i, 4))));
+	}
 }
 
 ubyte[] trim(int from,int length){
