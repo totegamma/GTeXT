@@ -8,10 +8,32 @@ void main(){
 	int numOfTable = array2uint(trim(4,2));
 	writeln("テーブルの数: " ~ to!string(numOfTable));
 	for(int i; i<numOfTable; i++){
-		writeln("テーブル名: " ~ array2string(trim(12 +16*i, 4)));
-		writeln("\tチェックサム: " ~ to!string(array2uint(trim(16 +16*i, 4))));
-		writeln("\tオフセット: " ~ to!string(array2uint(trim(20 +16*i, 4))));
-		writeln("\tデータ長: " ~ to!string(array2uint(trim(24 +16*i, 4))));
+		string tag		= array2string(trim(12 +16*i, 4));
+		uint checkSum	= array2uint(trim(16 +16*i, 4));
+		uint offset		= array2uint(trim(20 +16*i, 4));
+		uint dataLength = array2uint(trim(24 +16*i, 4));
+		writeln("テーブル名: " ~ tag);
+		writeln("\tチェックサム: " ~ to!string(checkSum));
+		writeln("\tオフセット: " ~ to!string(offset));
+		writeln("\tデータ長: " ~ to!string(dataLength));
+		
+		switch(tag){
+			case "cmap":
+				writeln("\t#version: " ~ to!string(array2uint(trim(offset,2))));
+				uint numTables = array2uint(trim(offset+2,2));
+				writeln("\t#numTables: " ~ to!string(numTables));
+				for(int j; j<numTables; j++){
+					writeln("\t-=-=-=-=-=-=-=-=-=[#" ~ to!string(j) ~ "]");
+					writeln("\t##platformID: " ~ to!string(array2uint(trim(offset+4 +8*j,2))));
+					writeln("\t##encodingID: " ~ to!string(array2uint(trim(offset+6 +8*j,2))));
+					writeln("\t##offset: " ~ to!string(array2uint(trim(offset+8 +8*j,4))));
+				}
+				
+				break;
+			default:
+				break;
+		}
+		
 	}
 }
 
