@@ -26,9 +26,26 @@ void main(){
 					writeln("\t-=-=-=-=-=-=-=-=-=[#" ~ to!string(j) ~ "]");
 					writeln("\t##platformID: " ~ to!string(array2uint(trim(offset+4 +8*j,2))));
 					writeln("\t##encodingID: " ~ to!string(array2uint(trim(offset+6 +8*j,2))));
-					writeln("\t##offset: " ~ to!string(array2uint(trim(offset+8 +8*j,4))));
+					uint tableOffset = array2uint(trim(offset+8 +8*j,4));
+					writeln("\t##offset: " ~ to!string(tableOffset));
+					writeln("\t\t#format: " ~ to!string(array2uint(trim(offset + tableOffset,2))));
 				}
 				
+				break;
+			case "hhea":
+				writeln("\t#version: " ~ to!string(array2uint(trim(offset,4))));
+				writeln("\t#Ascender: " ~ to!string(array2uint(trim(offset+4,2))));
+				writeln("\t#Descender: " ~ to!string(array2uint(trim(offset+6,2))));
+				writeln("\t#LineGap: " ~ to!string(array2uint(trim(offset+8,2))));
+				writeln("\t#advanceWidthMax: " ~ to!string(array2uint(trim(offset+10,2))));
+				writeln("\t#minLeftSideBearing: " ~ to!string(array2uint(trim(offset+12,2))));
+				writeln("\t#minRightSideBearing: " ~ to!string(array2uint(trim(offset+14,2))));
+				writeln("\t#xMaxExtent: " ~ to!string(array2uint(trim(offset+16,2))));
+				writeln("\t#caretSlopeRise: " ~ to!string(array2uint(trim(offset+18,2))));
+				writeln("\t#caretSlopeRun: " ~ to!string(array2uint(trim(offset+20,2))));
+				writeln("\t#caretOffset: " ~ to!string(array2uint(trim(offset+22,2))));
+				writeln("\t#metricDataFormat: " ~ to!string(array2uint(trim(offset+32,2))));
+				writeln("\t#numberOfHMetrics: " ~ to!string(array2uint(trim(offset+34,2))));
 				break;
 			default:
 				break;
