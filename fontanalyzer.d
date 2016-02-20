@@ -86,8 +86,8 @@ short array2short(ubyte[] in0){
 	foreach(elem;in0){
 		formattedWrite(writer,"%02x",elem);
 	}
-	writeln(writer.data);
-	return to!short(writer.data,16);
+	//writeln(writer.data);
+	return to!ushort(writer.data,16);
 }
 
 uint array2uint(ubyte[] in0){
