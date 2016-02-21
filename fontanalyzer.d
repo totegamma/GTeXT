@@ -2,25 +2,30 @@ import std.stdio;
 import std.conv;
 import std.format;
 import std.array;
+import std.utf;
 
 uint[uint] charCodeToGlyphId;
 
 void main(){
-	writeln("ファイル識別子: " ~ array2string(trim(0,4)));
+	//writeln("ファイル識別子: " ~ array2string(trim(0,4)));
 	int numOfTable = array2uint(trim(4,2));
-	writeln("テーブルの数: " ~ to!string(numOfTable));
+	uint numberOfHMetrics;
+	uint[] advanceWidth;
+	//writeln("テーブルの数: " ~ to!string(numOfTable));
 	for(int i; i<numOfTable; i++){
 		string tag		= array2string(trim(12 +16*i, 4));
 		uint checkSum	= array2uint(trim(16 +16*i, 4));
 		uint offset		= array2uint(trim(20 +16*i, 4));
 		uint dataLength = array2uint(trim(24 +16*i, 4));
+		/*
 		writeln("テーブル名: " ~ tag);
 		writeln("\tチェックサム: " ~ to!string(checkSum));
 		writeln("\tオフセット: " ~ to!string(offset));
 		writeln("\tデータ長: " ~ to!string(dataLength));
-		
+		*/
 		switch(tag){
 			case "head":
+				/*
 				writeln("\t#version: " ~			to!string(array2uint(trim(offset,4))));
 				writeln("\t#fontRevision: " ~		to!string(array2uint(trim(offset+4,4))));
 				writeln("\tcheckSumAdjustment: " ~	to!string(array2uint(trim(offset+8,4))));
@@ -38,20 +43,21 @@ void main(){
 				writeln("\t#fontDirectionHint: " ~	to!string(array2short(trim(offset+48,2))));
 				writeln("\t#indexToLocFormat: " ~	to!string(array2short(trim(offset+50,2))));
 				writeln("\t#glyphDataFormat: " ~	to!string(array2short(trim(offset+52,2))));
+				*/
 				break;
 			case "cmap":
-				writeln("\t#version: " ~			to!string(array2uint(trim(offset,2))));
+				//writeln("\t#version: " ~			to!string(array2uint(trim(offset,2))));
 				uint numTables =							  array2uint(trim(offset+2,2));
-				writeln("\t#numTables: " ~ to!string(numTables));
+				//writeln("\t#numTables: " ~ to!string(numTables));
 				for(int j; j<numTables; j++){
-					writeln("\t-=-=-=-=-=-=-=-=-=[#" ~ to!string(j) ~ "]");
-					writeln("\t##platformID: " ~	to!string(array2uint(trim(offset+4 +8*j,2))));
+					//writeln("\t-=-=-=-=-=-=-=-=-=[#" ~ to!string(j) ~ "]");
+					//writeln("\t##platformID: " ~	to!string(array2uint(trim(offset+4 +8*j,2))));
 					uint encodingID = array2uint(trim(offset+6 +8*j,2));
-					writeln("\t##encodingID: " ~	to!string(encodingID));
+					//writeln("\t##encodingID: " ~	to!string(encodingID));
 					uint tableOffset =						  array2uint(trim(offset+8 +8*j,4));
-					writeln("\t##offset: " ~ to!string(tableOffset));
+					//writeln("\t##offset: " ~ to!string(tableOffset));
 					uint format = array2uint(trim(offset + tableOffset,2));
-					writeln("\t\t#format: " ~		to!string(format));
+					//writeln("\t\t#format: " ~		to!string(format));
 					if (format == 2){
 						/*
 						writeln("\t\t#length: " ~ to!string(array2uint(trim(offset + tableOffset+2,2))));
@@ -63,19 +69,21 @@ void main(){
 						}
 						*/
 					}else if(format == 4 && encodingID == 1){
-						writeln("\t\t#length: " ~ to!string(array2uint(trim(offset + tableOffset+2,2))));
-						writeln("\t\t#language: " ~ to!string(array2uint(trim(offset + tableOffset+4,2))));
+						//writeln("\t\t#length: " ~ to!string(array2uint(trim(offset + tableOffset+2,2))));
+						//writeln("\t\t#language: " ~ to!string(array2uint(trim(offset + tableOffset+4,2))));
 						uint segCount = array2uint(trim(offset + tableOffset+6,2))/2;
+						/*
 						writeln("\t\t#segCount: " ~ to!string(segCount));
 						writeln("\t\t#searchRange: " ~ to!string(array2uint(trim(offset + tableOffset+8,2))));
 						writeln("\t\t#entrySelector: " ~ to!string(array2uint(trim(offset + tableOffset+10,2))));
 						writeln("\t\t#rangeShift: " ~ to!string(array2uint(trim(offset + tableOffset+12,2))));
+						*/
 						uint endCount[];
 						for(int k; k<segCount; k++){
 							//writeln("\t\t#endCount: " ~ to!string(array2uint(trim(offset + tableOffset+14 +2*k,2))));
 							endCount ~= array2uint(trim(offset + tableOffset+14 +2*k,2));
 						}
-						writeln("\t\t#reservedPad: " ~ to!string(array2uint(trim(offset +tableOffset +14 +segCount*2,2))));
+						//writeln("\t\t#reservedPad: " ~ to!string(array2uint(trim(offset +tableOffset +14 +segCount*2,2))));
 						uint startCount[];
 						for(int k; k<segCount; k++){
 							//writeln("\t\t#startCount: " ~ to!string(array2uint(trim(offset + tableOffset+14 + segCount*2 +2 +2*k,2))));
@@ -112,12 +120,13 @@ void main(){
 							}
 						}
 						charCodeToGlyphId.rehash;
-						writeln(charCodeToGlyphId);
+						//writeln(charCodeToGlyphId);
 					}
 				}
 				
 				break;
 			case "hhea":
+				/*
 				writeln("\t#version: " ~			to!string(array2uint(trim(offset,4))));
 				writeln("\t#Ascender: " ~			to!string(array2uint(trim(offset+4,2))));
 				writeln("\t#Descender: " ~			to!string(array2uint(trim(offset+6,2))));
@@ -131,15 +140,29 @@ void main(){
 				writeln("\t#caretOffset: " ~		to!string(array2uint(trim(offset+22,2))));
 				writeln("\t#metricDataFormat: " ~	to!string(array2uint(trim(offset+32,2))));
 				writeln("\t#numberOfHMetrics: " ~	to!string(array2uint(trim(offset+34,2))));
+				*/
+				numberOfHMetrics = array2uint(trim(offset+34,2));
+				break;
+			case "hmtx":
+				for(int j; j< numberOfHMetrics; j++){
+					advanceWidth ~= array2uint(trim(offset+4*j,2));
+				}
 				break;
 			default:
 				break;
 		}
 		
 	}
-
-	writeln(charCodeToGlyphId[0x65e5]);
-
+	string bo = "消えろ！消えろ！つかの間の灯火！Life's but a walking shadow, a poor player.";
+	//writeln(advanceWidth[charCodeToGlyphId[0x65e5]]);
+	auto writer = appender!string();
+	foreach(c; array(bo)) {
+		foreach(b; [c].toUTF16) {
+			formattedWrite(writer,"%04x",b);
+		}
+		writeln(advanceWidth[charCodeToGlyphId[to!int(writer.data,16)]]);
+		writer = appender!string();
+	}
 }
 
 ubyte[] trim(int from,int length){
