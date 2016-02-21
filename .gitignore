@@ -10,3 +10,5 @@ fontanalyzer
 resources/fonts/
 
 *.o
+
+unicode

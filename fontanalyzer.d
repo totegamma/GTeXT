@@ -3,6 +3,8 @@ import std.conv;
 import std.format;
 import std.array;
 
+uint[uint] charCodeToGlyphId;
+
 void main(){
 	writeln("ファイル識別子: " ~ array2string(trim(0,4)));
 	int numOfTable = array2uint(trim(4,2));
@@ -44,10 +46,74 @@ void main(){
 				for(int j; j<numTables; j++){
 					writeln("\t-=-=-=-=-=-=-=-=-=[#" ~ to!string(j) ~ "]");
 					writeln("\t##platformID: " ~	to!string(array2uint(trim(offset+4 +8*j,2))));
-					writeln("\t##encodingID: " ~	to!string(array2uint(trim(offset+6 +8*j,2))));
+					uint encodingID = array2uint(trim(offset+6 +8*j,2));
+					writeln("\t##encodingID: " ~	to!string(encodingID));
 					uint tableOffset =						  array2uint(trim(offset+8 +8*j,4));
 					writeln("\t##offset: " ~ to!string(tableOffset));
-					writeln("\t\t#format: " ~		to!string(array2uint(trim(offset + tableOffset,2))));
+					uint format = array2uint(trim(offset + tableOffset,2));
+					writeln("\t\t#format: " ~		to!string(format));
+					if (format == 2){
+						/*
+						writeln("\t\t#length: " ~ to!string(array2uint(trim(offset + tableOffset+2,2))));
+						writeln("\t\t#language: " ~ to!string(array2uint(trim(offset + tableOffset+4,2))));
+						for(int k; k<256; k++){
+							write("\t\t#subHeaderKeys(");
+							writef("%02x",k);
+							writeln("): " ~ to!string(array2uint(trim(offset + tableOffset+6 +2*k,2))/8));
+						}
+						*/
+					}else if(format == 4 && encodingID == 1){
+						writeln("\t\t#length: " ~ to!string(array2uint(trim(offset + tableOffset+2,2))));
+						writeln("\t\t#language: " ~ to!string(array2uint(trim(offset + tableOffset+4,2))));
+						uint segCount = array2uint(trim(offset + tableOffset+6,2))/2;
+						writeln("\t\t#segCount: " ~ to!string(segCount));
+						writeln("\t\t#searchRange: " ~ to!string(array2uint(trim(offset + tableOffset+8,2))));
+						writeln("\t\t#entrySelector: " ~ to!string(array2uint(trim(offset + tableOffset+10,2))));
+						writeln("\t\t#rangeShift: " ~ to!string(array2uint(trim(offset + tableOffset+12,2))));
+						uint endCount[];
+						for(int k; k<segCount; k++){
+							//writeln("\t\t#endCount: " ~ to!string(array2uint(trim(offset + tableOffset+14 +2*k,2))));
+							endCount ~= array2uint(trim(offset + tableOffset+14 +2*k,2));
+						}
+						writeln("\t\t#reservedPad: " ~ to!string(array2uint(trim(offset +tableOffset +14 +segCount*2,2))));
+						uint startCount[];
+						for(int k; k<segCount; k++){
+							//writeln("\t\t#startCount: " ~ to!string(array2uint(trim(offset + tableOffset+14 + segCount*2 +2 +2*k,2))));
+							startCount ~= array2uint(trim(offset + tableOffset+14 + segCount*2 +2 +2*k,2));
+						}
+						uint idDelta[];
+						for(int k; k<segCount; k++){
+							//writeln("\t\t#startCount: " ~ to!string(array2uint(trim(offset + tableOffset+14 + segCount*2 +2 +2*k,2))));
+							idDelta ~= array2uint(trim(offset + tableOffset+14 + segCount*4 +2 +2*k,2));
+						}
+						uint idRangeOffset[];
+						for(int k; k<segCount; k++){
+							//writeln("\t\t#startCount: " ~ to!string(array2uint(trim(offset + tableOffset+14 + segCount*2 +2 +2*k,2))));
+							idRangeOffset ~= array2uint(trim(offset + tableOffset+14 + segCount*6 +2 +2*k,2));
+						}
+
+						for(int k; k<segCount; k++){
+							int pointer;
+							//writeln("start: " ~ to!string(startCount[k]) ~ " end: " ~ to!string(endCount[k]));
+							for(uint l = startCount[k]; l<= endCount[k]; l++){
+								//writef("%04x ",l);
+								if(idRangeOffset[k] == 0){
+									charCodeToGlyphId[l] = (l+idDelta[k])%65536;
+								}else{
+									uint glyphOffset = offset +tableOffset+16 +segCount*8
+														+((idRangeOffset[k]/2)+(l-startCount[k])+(k-segCount))*2;
+									uint glyphIndex = array2uint(trim(glyphOffset,2));
+									if(glyphIndex != 0){
+										glyphIndex += idDelta[k];
+										glyphIndex %= 65536;
+										charCodeToGlyphId[l] = glyphIndex;
+									}
+								}
+							}
+						}
+						charCodeToGlyphId.rehash;
+						writeln(charCodeToGlyphId);
+					}
 				}
 				
 				break;
@@ -71,6 +137,9 @@ void main(){
 		}
 		
 	}
+
+	writeln(charCodeToGlyphId[0x65e5]);
+
 }
 
 ubyte[] trim(int from,int length){
