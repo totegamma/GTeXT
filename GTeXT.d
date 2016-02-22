@@ -25,7 +25,6 @@ import std.format;
 import std.array;
 import std.utf;
 
-import loadcmap;
 import pdfObjectClass;
 import parser;
 
@@ -35,7 +34,6 @@ uint[] distanceFromTop;
 
 void main(){
 
-	_loadcmap();
 	parse();
 	construct();
 	//PDF書き出し

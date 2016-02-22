@@ -1,3 +1,12 @@
+//
+//  pdfObjectClass.d
+//  GTeXT
+//
+//  Created by thotgamma on 2016/02/22.
+//
+//	#このファイル:
+//		pdfの構造を表す構造体としてのclass。
+//
 module pdfObjectClass;
 import std.stdio;
 import core.vararg;

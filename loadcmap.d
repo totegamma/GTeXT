@@ -1,3 +1,12 @@
+//
+//  loadcmap.d
+//  GTeXT
+//
+//  Created by thotgamma on 2016/02/22.
+//
+//	#このファイル:
+//		cmapファイルを読み込み、辞書に書き出す。
+//
 module loadcmap;
 import std.stdio;
 import std.string;
@@ -8,7 +17,7 @@ import std.utf;
 
 uint[uint] cmap;
 
-void _loadcmap(){
+void loadcmap(){
 	string line;
 	string[] sentences;
 	bool loadChar = false;

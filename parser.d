@@ -5,8 +5,7 @@
 //  Created by thotgamma on 2016/02/04.
 //
 //	#このファイル:
-//		パーサーだけをじっくり作るために試験的に別のファイルに記述している。
-//		完成したら本体とマージする予定
+//		input.gtの構文を解析し、必要な要素を抽出し格納する。
 //
 //	#コードの流れ:
 //		1.入力ファイルからプリコマンド行だけを抽出し処理。この際本文は無視する。
@@ -20,6 +19,7 @@
 //
 
 module parser;
+
 import std.stdio;
 import std.string;
 import std.regex;
@@ -33,6 +33,7 @@ import loadcmap;
 int[4][string] paperSizeDictionary;
 
 //PDFの生成に必要な要素(これを集めるのが目的)
+//先に初期値を代入しておく。
 string title = "noname";
 string author = "anonymous";
 sentence[] sentences;
@@ -41,6 +42,7 @@ int[4] padding = [28, 28, 28, 28]; //10mmのパディング
 int fontsize = 20;
 string streamBuff;
 
+//文章を要素ごとに分割する際、それを格納する構造体
 struct sentence{
 	string type;
 	string content;
@@ -57,8 +59,8 @@ void parse(){
 
 	auto fin = File(inputFile,"r");
 
-
-
+	//cmapファイルをの読み込み
+	loadcmap.loadcmap();
 
 	//解析に使う変数
 	string line;
@@ -315,7 +317,6 @@ string string2cid(string in0){
 	uint unicode = to!uint(writer.data,16);
 	writer = appender!string();
 	formattedWrite(writer,"%x",cmap[unicode]);
-	//writeln(rightJustify(writer.data,4,'0'));
 	output ~= rightJustify(writer.data,4,'0');
 	writer = appender!string();
 	}

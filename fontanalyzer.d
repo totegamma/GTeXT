@@ -1,3 +1,14 @@
+//
+//  fontanalyzer.d
+//  GTeXT
+//
+//  Created by thotgamma on 2016/02/22.
+//
+//	#このファイル:
+//		フォントファイルを解析し、様々な情報を得る。
+//		今の所head,cmap,hhea,htmxテーブルを読み込むことができる。
+//		また、cmapテーブルに於いてはformat4のみ、実装されている。
+//
 import std.stdio;
 import std.conv;
 import std.format;
