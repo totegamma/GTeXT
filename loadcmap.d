@@ -1,3 +1,4 @@
+module loadcmap;
 import std.stdio;
 import std.string;
 import std.conv;
@@ -5,14 +6,13 @@ import std.format;
 import std.array;
 import std.utf;
 
-void main(){
+uint[uint] cmap;
+
+void _loadcmap(){
 	string line;
 	string[] sentences;
 	bool loadChar = false;
 	bool loadRange = false;
-
-	uint[uint]cmap;
-
 
 	auto fin = File("resources/cmap/UniJIS2004-UTF8-H.txt","r");
 	while(!fin.eof){
@@ -49,6 +49,7 @@ void main(){
 			}
 		}
 	}
+	/*
 	string input = "これはタイトルです";
 	auto writer = appender!string();
 	foreach(c; array(input)) {
@@ -61,4 +62,5 @@ void main(){
 	writeln(rightJustify(writer.data,4,'0'));
 	writer = appender!string();
 	}
+	*/
 }

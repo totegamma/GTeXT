@@ -19,15 +19,27 @@
 //			先に全てのプリコマンド行を捜査するため。
 //
 
-
+module parser;
 import std.stdio;
 import std.string;
 import std.regex;
 import std.conv;
+import std.array;
+import std.format;
+import std.utf;
+
+import loadcmap;
 
 int[4][string] paperSizeDictionary;
 
-
+//PDFの生成に必要な要素(これを集めるのが目的)
+string title = "noname";
+string author = "anonymous";
+sentence[] sentences;
+int[4] paperSize = [0, 0, 595, 842]; //a4
+int[4] padding = [28, 28, 28, 28]; //10mmのパディング
+int fontsize = 20;
+string streamBuff;
 
 struct sentence{
 	string type;
@@ -38,20 +50,14 @@ struct sentence{
 	}
 }
 
-void main(){
+void parse(){
 
 	//デバッグを素早く行うため入力ファイル名はあらかじめ記入しておいた
 	string inputFile = "input.gt";
 
 	auto fin = File(inputFile,"r");
 
-	//PDFの生成に必要な要素(これを集めるのが目的)
-	string title = "noname";
-	string author = "anonymous";
-	sentence[] sentences;
-	int[4] paperSize = [0, 0, 595, 842]; //a4
-	int[4] padding = [28, 28, 28, 28]; //10mmのパディング
-	int fontsize = 20;
+
 
 
 	//解析に使う変数
@@ -90,7 +96,7 @@ void main(){
 									author = argDict["_default_"];
 									break;
 								case "paperSize":
-									writeln(argDict);
+									//writeln(argDict);
 									if("_default_" in argDict){
 										paperSize = paperSizeDictionary[argDict["_default_"]];
 									}else{
@@ -122,11 +128,13 @@ void main(){
 		}
 	}
 
+	/*
 	//デバッグのため出力
 	writeln("title: " ~ title);
 	writeln("author: " ~ author);
 	writeln(paperSize);
 	writeln(padding);
+	*/
 
 	//ファイル読み込みのシーカーを頭に戻す
 	fin.rewind();
@@ -204,29 +212,50 @@ void main(){
 	buff = "";
 	currentmode = "normal";
 
-	writeln("---[result]----");
-	writeln(sentences.length);
+	/*
 	foreach(elem;sentences){
 		writeln(elem.type ~ ": " ~ elem.content);
 	}
+	*/
 
-	writeln("---[stream]---");
-	writeln("1. 0. 0. 1. " ~ to!string(padding[0]) ~ ". " ~ to!string(paperSize[3] - padding[3] - fontsize) ~ ". cm");
-	writeln("BT");
-	writeln("/F0 " ~ to!string(fontsize) ~ " Tf");
-	writeln( to!string(fontsize + 4) ~ " TL");
+	streamBuff ~= "1. 0. 0. 1. " ~ to!string(padding[0]) ~ ". " ~ to!string(paperSize[3] - padding[3] - fontsize) ~ ". cm\n";
+	streamBuff ~= "BT\n";
+	streamBuff ~= "/F0 " ~ to!string(fontsize) ~ " Tf\n";
+	streamBuff ~= to!string(fontsize + 4) ~ " TL\n";
 
 	string stringbuff;
+	uint width;
 	foreach(elem;sentences){
 		if(elem.type == "normal"){
-			stringbuff ~= elem.content;
-		}else if(elem.type == "command" && elem.content == "newparagraph"){
-			writeln("(" ~ stringbuff ~ ") Tj T*");
-			stringbuff = "";
+			foreach(str;array(elem.content)){
+				width += fontsize;
+				if(width > paperSize[2] - padding[0] - padding[1]){
+					streamBuff ~= "<" ~ string2cid(stringbuff) ~ "> Tj T*\n";
+					stringbuff = "";
+					width = 0;
+					stringbuff ~= str;
+				}else{
+					stringbuff ~= str;
+				}
+			}
+			
+
+		}else if(elem.type == "command"){
+			switch(elem.content){
+				case "newparagraph":
+					streamBuff ~= "<" ~ string2cid(stringbuff) ~ "> Tj T*\n";
+					stringbuff = "";
+					width = 0;
+					break;
+				case "pi":
+					stringbuff ~= "π";
+				default:
+					break;
+			}
 		}
 	}
 
-	writeln("ET");
+	streamBuff ~= "ET\n";
 
 }
 
@@ -271,4 +300,24 @@ string[string] argumentAnalyzer(string in0){
 
 	return argument;
 
+}
+
+string string2cid(string in0){
+	if(in0 == ""){
+		return "";
+	}
+	auto writer = appender!string();
+	string output;
+	foreach(c; array(in0)) {
+		foreach(b; [c].toUTF8) {
+			formattedWrite(writer,"%x",b);
+		}
+	uint unicode = to!uint(writer.data,16);
+	writer = appender!string();
+	formattedWrite(writer,"%x",cmap[unicode]);
+	//writeln(rightJustify(writer.data,4,'0'));
+	output ~= rightJustify(writer.data,4,'0');
+	writer = appender!string();
+	}
+	return output;
 }

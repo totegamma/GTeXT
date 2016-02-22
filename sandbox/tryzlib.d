@@ -3,7 +3,7 @@ import std.zlib;
 import std.conv;
 
 void main(){
-	encode();
+	decode();
 }
 
 void decode(){
