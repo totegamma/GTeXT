@@ -44,6 +44,8 @@ int[4] padding = [28, 28, 28, 28]; //10mmのパディング
 int fontsize = 20;
 string streamBuff;
 
+uint[] W;
+
 //文章を要素ごとに分割する際、それを格納する構造体
 struct sentence{
 	string type;
@@ -240,39 +242,28 @@ void parse(){
 	foreach(elem;sentences){
 		if(elem.type == "normal"){
 			foreach(str;array(elem.content)){
-				width += fontsize;
-				if(width > paperSize[2] - padding[0] - padding[1]){
+				string cid = string2cid(to!string(str));
+				uint ciduint = to!uint(cid,16);
+				uint advancewidth = getAdvanceWidth(to!string(str));
+				width += fontsize*advancewidth;
+				//writeln(width);
+				if(width > (paperSize[2] - padding[0] - padding[1])*1000){
 					streamBuff ~= "<" ~ stringbuff ~ "> Tj T*\n";
 					stringbuff = "";
+					//writeln(width);
 					width = 0;
-					string cid = string2cid(to!string(str));
-					uint ciduint = to!uint(cid,16);
-					stringbuff ~= cid;
-					bool flag = true;;
-					foreach(a;widthCidMapping){
-						if(a.cid == ciduint){
-							flag = false;
-							break;
-						}
+				}
+				
+				stringbuff ~= cid;
+				bool flag = true;;
+				foreach(a;widthCidMapping){
+					if(a.cid == ciduint){
+						flag = false;
+						break;
 					}
-					if(flag == true){
-						widthCidMapping ~= widthCidStruct(ciduint,getAdvanceWidth(to!string(str)));
-					}
-					
-				}else{
-					string cid = string2cid(to!string(str));
-					uint ciduint = to!uint(cid,16);
-					stringbuff ~= cid;
-					bool flag = true;;
-					foreach(a;widthCidMapping){
-						if(a.cid == ciduint){
-							flag = false;
-							break;
-						}
-					}
-					if(flag == true){
-						widthCidMapping ~= widthCidStruct(ciduint,getAdvanceWidth(to!string(str)));
-					}
+				}
+				if(flag == true){
+					widthCidMapping ~= widthCidStruct(ciduint,advancewidth);
 				}
 			}
 			
@@ -287,6 +278,7 @@ void parse(){
 				case "pi":
 					stringbuff ~= string2cid("π");
 					stringbuff ~= string2cid(" ");
+					width += fontsize*getAdvanceWidth("π");
 				default:
 					break;
 			}
@@ -294,8 +286,16 @@ void parse(){
 	}
 
 	streamBuff ~= "ET\n";
+
 	sort!("a.cid < b.cid")(widthCidMapping);
-	writeln(widthCidMapping);
+	//writeln(widthCidMapping);
+	foreach(a; widthCidMapping){
+		if(a.width==1000)continue;
+		W ~= a.cid;
+		W ~= a.cid;
+		W ~= a.width;
+	}
+	//writeln(W);
 
 }
 

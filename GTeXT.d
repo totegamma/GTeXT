@@ -197,6 +197,10 @@ void construct(){
 												new pdfObject("array",[
 													new pdfObject("refer",6)
 												])
+											),
+											new pdfObject("recoad",
+												new pdfObject("name","DW"),
+												new pdfObject("number",1000)
 											)
 										])
 									)
@@ -204,6 +208,12 @@ void construct(){
 							)
 						])
 					]);
+
+	pdfObject Wentry = new pdfObject("array",[]);
+	foreach(Welem;W){
+		Wentry.array ~= new pdfObject("number",Welem);
+	}
+
 	//6 0 obj
 	pdfObjects ~=	new pdfObject("object",[
 						new pdfObject("dictionary",[
@@ -239,6 +249,10 @@ void construct(){
 							new pdfObject("recoad",
 								new pdfObject("name","FontDescriptor"),
 								new pdfObject("refer",7)
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","W"),
+								Wentry
 							)
 						])
 					]);
