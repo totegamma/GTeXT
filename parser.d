@@ -27,8 +27,10 @@ import std.conv;
 import std.array;
 import std.format;
 import std.utf;
+import std.algorithm;
 
 import loadcmap;
+import fontanalyzer;
 
 int[4][string] paperSizeDictionary;
 
@@ -52,6 +54,13 @@ struct sentence{
 	}
 }
 
+struct widthCidStruct{
+	uint cid;
+	uint width;
+}
+
+widthCidStruct[] widthCidMapping;
+
 void parse(){
 
 	//デバッグを素早く行うため入力ファイル名はあらかじめ記入しておいた
@@ -61,6 +70,7 @@ void parse(){
 
 	//cmapファイルをの読み込み
 	loadcmap.loadcmap();
+	makeFontMapping();
 
 	//解析に使う変数
 	string line;
@@ -232,12 +242,37 @@ void parse(){
 			foreach(str;array(elem.content)){
 				width += fontsize;
 				if(width > paperSize[2] - padding[0] - padding[1]){
-					streamBuff ~= "<" ~ string2cid(stringbuff) ~ "> Tj T*\n";
+					streamBuff ~= "<" ~ stringbuff ~ "> Tj T*\n";
 					stringbuff = "";
 					width = 0;
-					stringbuff ~= str;
+					string cid = string2cid(to!string(str));
+					uint ciduint = to!uint(cid,16);
+					stringbuff ~= cid;
+					bool flag = true;;
+					foreach(a;widthCidMapping){
+						if(a.cid == ciduint){
+							flag = false;
+							break;
+						}
+					}
+					if(flag == true){
+						widthCidMapping ~= widthCidStruct(ciduint,getAdvanceWidth(to!string(str)));
+					}
+					
 				}else{
-					stringbuff ~= str;
+					string cid = string2cid(to!string(str));
+					uint ciduint = to!uint(cid,16);
+					stringbuff ~= cid;
+					bool flag = true;;
+					foreach(a;widthCidMapping){
+						if(a.cid == ciduint){
+							flag = false;
+							break;
+						}
+					}
+					if(flag == true){
+						widthCidMapping ~= widthCidStruct(ciduint,getAdvanceWidth(to!string(str)));
+					}
 				}
 			}
 			
@@ -245,12 +280,13 @@ void parse(){
 		}else if(elem.type == "command"){
 			switch(elem.content){
 				case "newparagraph":
-					streamBuff ~= "<" ~ string2cid(stringbuff) ~ "> Tj T*\n";
+					streamBuff ~= "<" ~ stringbuff ~ "> Tj T*\n";
 					stringbuff = "";
 					width = 0;
 					break;
 				case "pi":
-					stringbuff ~= "π";
+					stringbuff ~= string2cid("π");
+					stringbuff ~= string2cid(" ");
 				default:
 					break;
 			}
@@ -258,6 +294,8 @@ void parse(){
 	}
 
 	streamBuff ~= "ET\n";
+	sort!("a.cid < b.cid")(widthCidMapping);
+	writeln(widthCidMapping);
 
 }
 

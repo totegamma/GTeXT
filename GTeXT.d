@@ -34,10 +34,9 @@ uint[] distanceFromTop;
 
 void main(){
 
-	parse();
-	construct();
-	//PDF書き出し
-	outputpdf();
+	parse();		//input.gtの解析
+	construct();	//PDFの構造体を作る
+	outputpdf();	//構造体を元に実際にPDFを書き出す
 }
 
 

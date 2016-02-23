@@ -12,3 +12,5 @@ resources/fonts/
 *.o
 
 unicode
+
+sandbox/hoge.d

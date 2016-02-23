@@ -9,6 +9,7 @@
 //		今の所head,cmap,hhea,htmxテーブルを読み込むことができる。
 //		また、cmapテーブルに於いてはformat4のみ、実装されている。
 //
+module fontanalyzer;
 import std.stdio;
 import std.conv;
 import std.format;
@@ -17,11 +18,13 @@ import std.utf;
 
 uint[uint] charCodeToGlyphId;
 
-void main(){
+uint[] advanceWidth;
+
+
+void makeFontMapping(){
 	//writeln("ファイル識別子: " ~ array2string(trim(0,4)));
 	int numOfTable = array2uint(trim(4,2));
 	uint numberOfHMetrics;
-	uint[] advanceWidth;
 	//writeln("テーブルの数: " ~ to!string(numOfTable));
 	for(int i; i<numOfTable; i++){
 		string tag		= array2string(trim(12 +16*i, 4));
@@ -164,6 +167,7 @@ void main(){
 		}
 		
 	}
+	/*
 	string bo = "消えろ！消えろ！つかの間の灯火！Life's but a walking shadow, a poor player.";
 	//writeln(advanceWidth[charCodeToGlyphId[0x65e5]]);
 	auto writer = appender!string();
@@ -174,6 +178,13 @@ void main(){
 		writeln(advanceWidth[charCodeToGlyphId[to!int(writer.data,16)]]);
 		writer = appender!string();
 	}
+	*/
+}
+
+uint getAdvanceWidth(string in0){
+	auto writer = appender!string();
+	auto chr = array(in0)[0];
+	return advanceWidth[charCodeToGlyphId[[chr].toUTF16[0]]];
 }
 
 ubyte[] trim(int from,int length){
