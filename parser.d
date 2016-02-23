@@ -247,7 +247,7 @@ void parse(){
 				uint advancewidth = getAdvanceWidth(to!string(str));
 				width += fontsize*advancewidth;
 				//writeln(width);
-				if(width > (paperSize[2] - padding[0] - padding[1])*1000){
+				if(width > (paperSize[2] - padding[0] - padding[1] - 10)*1000){
 					streamBuff ~= "<" ~ stringbuff ~ "> Tj T*\n";
 					stringbuff = "";
 					//writeln(width);
