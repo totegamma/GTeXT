@@ -41,7 +41,7 @@ string author = "anonymous";
 sentence[] sentences;
 int[4] paperSize = [0, 0, 595, 842]; //a4
 int[4] padding = [28, 28, 28, 28]; //10mmのパディング
-int fontsize = 20;
+int currentFontSize = 20;
 string streamBuff;
 
 uint[] W;
@@ -50,11 +50,19 @@ uint[] W;
 struct sentence{
 	string type;
 	string content;
+	string argument;
 	this(string in0, string in1){
 		type = in0;
 		content = in1;
 	}
 }
+
+class outputline{
+	uint maxFontSize;
+	string stream;
+}
+
+outputline[] outputlines;
 
 struct widthCidStruct{
 	uint cid;
@@ -199,6 +207,10 @@ void parse(){
 						sentences ~= sentence("command",buff);
 						buff = "";
 						currentmode = "normal";
+					}else if(str == '('){
+						sentences ~= sentence("command",buff);
+						buff = "";
+						currentmode = "argument";
 					}else{
 						buff ~= str;
 					}
@@ -206,6 +218,15 @@ void parse(){
 				case "math":
 					if(str == ']'){
 						sentences ~= sentence("math",buff);
+						buff = "";
+						currentmode = "normal";
+					}else{
+						buff ~= str;
+					}
+					break;
+				case "argument":
+					if(str == ')'){
+						sentences[$-1].argument = buff;
 						buff = "";
 						currentmode = "normal";
 					}else{
@@ -232,26 +253,29 @@ void parse(){
 	}
 	*/
 
-	streamBuff ~= "1. 0. 0. 1. " ~ to!string(padding[0]) ~ ". " ~ to!string(paperSize[3] - padding[3] - fontsize) ~ ". cm\n";
-	streamBuff ~= "BT\n";
-	streamBuff ~= "/F0 " ~ to!string(fontsize) ~ " Tf\n";
-	streamBuff ~= to!string(fontsize + 4) ~ " TL\n";
-
+	outputline newline = new outputline;
+	uint currentWidth;
 	string stringbuff;
-	uint width;
-	foreach(elem;sentences){
+
+	foreach(elem; sentences){
 		if(elem.type == "normal"){
 			foreach(str;array(elem.content)){
 				string cid = string2cid(to!string(str));
 				uint ciduint = to!uint(cid,16);
-				uint advancewidth = getAdvanceWidth(to!string(str));
-				width += fontsize*advancewidth;
+				uint advanceWidth = getAdvanceWidth(to!string(str));
+				currentWidth += currentFontSize*advanceWidth;
 				//writeln(width);
-				if(width > (paperSize[2] - padding[0] - padding[1] - 10)*1000){
-					streamBuff ~= "<" ~ stringbuff ~ "> Tj T*\n";
+				if(currentWidth > (paperSize[2] - padding[0] - padding[1] - 10)*1000){ //改行するタイミング
+					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";
+					outputlines ~= newline;
+					newline = new outputline;
+					currentWidth = 0;
 					stringbuff = "";
-					//writeln(width);
-					width = 0;
+				}
+
+				if(newline.stream == ""){
+					newline.stream ~= "/F0 " ~ to!string(currentFontSize) ~ " Tf ";
+					newline.maxFontSize = currentFontSize;
 				}
 				
 				stringbuff ~= cid;
@@ -263,7 +287,7 @@ void parse(){
 					}
 				}
 				if(flag == true){
-					widthCidMapping ~= widthCidStruct(ciduint,advancewidth);
+					widthCidMapping ~= widthCidStruct(ciduint,advanceWidth);
 				}
 			}
 			
@@ -271,21 +295,38 @@ void parse(){
 		}else if(elem.type == "command"){
 			switch(elem.content){
 				case "newparagraph":
-					streamBuff ~= "<" ~ stringbuff ~ "> Tj T*\n";
+					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";
+					outputlines ~= newline;
+					newline = new outputline;
+					currentWidth = 0;
 					stringbuff = "";
-					width = 0;
 					break;
 				case "pi":
 					stringbuff ~= string2cid("π");
 					stringbuff ~= string2cid(" ");
-					width += fontsize*getAdvanceWidth("π");
+					currentWidth += currentFontSize*getAdvanceWidth("π");
+					break;
+				case "setFontSize":
+					auto argDict = argumentAnalyzer(elem.argument);
+					//writeln("bo");
+					//writeln(argDict["_default_"]);
+					currentFontSize = to!int(argDict["_default_"]);
+					break;
 				default:
 					break;
 			}
 		}
+
 	}
 
-	streamBuff ~= "ET\n";
+	streamBuff ~= "BT\n";
+	uint currentHeight = paperSize[3] - padding[3];
+	foreach(eachLine; outputlines){
+		currentHeight -= eachLine.maxFontSize ;
+		streamBuff ~= "1. 0. 0. 1. " ~ to!string(padding[0]) ~ ". " ~ to!string(currentHeight) ~ ". Tm ";
+		streamBuff ~= eachLine.stream;
+	}
+	streamBuff ~= "ET";
 
 	sort!("a.cid < b.cid")(widthCidMapping);
 	//writeln(widthCidMapping);

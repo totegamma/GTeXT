@@ -2,7 +2,9 @@
 #!author(piyopiyo)
 #!paperSize(a4)
 #!padding(20)
+#setFontSize(40)
 Hello,world!
+#setFontSize(20)
 
 Tomorrow, and tomorrow, and tomorrow
 Creeps in this petty pace from day to day,
@@ -15,12 +17,16 @@ And then is heard no more. It is a tale
 Told by an idiot, full of sound and fury
 Signifying nothing.
 
+#setFontSize(40)
 Command#br
+#setFontSize(20)
 
 The number #pi is a mathematical constant.
 #pi is commonly defined as the ratio of a circle's circumference [C] to its diameter [d]
 [#pi = C/D]
 
+#setFontSize(40)
 日本語表示テスト
+#setFontSize(20)
 
 消えろ、消えろ、つかの間の灯火！人生は歩きまわる影法師、あわれな役者だ、舞台の上でおおげさにみえをきっても、出場が終われば消えてしまう。
