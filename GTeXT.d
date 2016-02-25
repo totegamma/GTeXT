@@ -291,7 +291,7 @@ void construct(){
 							new pdfObject("recoad",
 								new pdfObject("name","Descent"),
 								new pdfObject("number",to!int(descender))
-							),
+							)/*,
 							new pdfObject("recoad",
 								new pdfObject("name","CapHeight"),
 								new pdfObject("number",742)
@@ -300,6 +300,7 @@ void construct(){
 								new pdfObject("name","StemV"),
 								new pdfObject("number",80)
 							)
+							*/
 						])
 					]);
 	//8 0 obj
