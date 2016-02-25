@@ -30,7 +30,7 @@ import std.utf;
 import std.algorithm;
 
 import loadcmap;
-import fontanalyzer;
+public import fontanalyzer;
 
 int[4][string] paperSizeDictionary;
 
@@ -265,7 +265,7 @@ void parse(){
 				uint advanceWidth = getAdvanceWidth(to!string(str));
 				currentWidth += currentFontSize*advanceWidth;
 				//writeln(width);
-				if(currentWidth > (paperSize[2] - padding[0] - padding[1] - 10)*1000){ //改行するタイミング
+				if(currentWidth > (paperSize[2] - padding[0] - padding[1] - 10)*unitsPerEm){ //改行するタイミング
 					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";
 					outputlines ~= newline;
 					newline = new outputline;
@@ -322,7 +322,7 @@ void parse(){
 	streamBuff ~= "BT\n";
 	uint currentHeight = paperSize[3] - padding[3];
 	foreach(eachLine; outputlines){
-		currentHeight -= eachLine.maxFontSize ;
+		currentHeight -= eachLine.maxFontSize + lineGap/unitsPerEm;
 		streamBuff ~= "1. 0. 0. 1. " ~ to!string(padding[0]) ~ ". " ~ to!string(currentHeight) ~ ". Tm ";
 		streamBuff ~= eachLine.stream;
 	}

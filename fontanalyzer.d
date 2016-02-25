@@ -19,6 +19,14 @@ import std.utf;
 uint[uint] charCodeToGlyphId;
 
 uint[] advanceWidth;
+short unitsPerEm;
+short xMin;
+short yMin;
+short xMax;
+short yMax;
+short ascender;
+short descender;
+short lineGap;
 
 
 void makeFontMapping(){
@@ -39,25 +47,30 @@ void makeFontMapping(){
 		*/
 		switch(tag){
 			case "head":
-				/*
-				writeln("\t#version: " ~			to!string(array2uint(trim(offset,4))));
-				writeln("\t#fontRevision: " ~		to!string(array2uint(trim(offset+4,4))));
-				writeln("\tcheckSumAdjustment: " ~	to!string(array2uint(trim(offset+8,4))));
-				writeln("\t#magicNumber: " ~		to!string(array2uint(trim(offset+12,4))));
-				writeln("\t#flags: " ~				to!string(array2uint(trim(offset+16,2))));
-				writeln("\t#unitsPerEm: " ~			to!string(array2uint(trim(offset+18,2))));
-				writeln("\t#created: " ~			to!string(array2ulong(trim(offset+20,8))));
-				writeln("\t#modified: " ~			to!string(array2ulong(trim(offset+28,8))));
-				writeln("\t#xMin: " ~				to!string(array2short(trim(offset+36,2))));
-				writeln("\t#yMin: " ~				to!string(array2short(trim(offset+38,2))));
-				writeln("\t#xMax: " ~				to!string(array2short(trim(offset+40,2))));
-				writeln("\t#yMax: " ~				to!string(array2short(trim(offset+42,2))));
-				writeln("\t#macStyle: " ~			to!string(array2uint(trim(offset+44,2))));
-				writeln("\t#lowestRecPPEM: " ~		to!string(array2uint(trim(offset+46,2))));
-				writeln("\t#fontDirectionHint: " ~	to!string(array2short(trim(offset+48,2))));
-				writeln("\t#indexToLocFormat: " ~	to!string(array2short(trim(offset+50,2))));
-				writeln("\t#glyphDataFormat: " ~	to!string(array2short(trim(offset+52,2))));
-				*/
+				
+				//writeln("\t#version: " ~			to!string(array2uint(trim(offset,4))));
+				//writeln("\t#fontRevision: " ~		to!string(array2uint(trim(offset+4,4))));
+				//writeln("\tcheckSumAdjustment: " ~	to!string(array2uint(trim(offset+8,4))));
+				//writeln("\t#magicNumber: " ~		to!string(array2uint(trim(offset+12,4))));
+				//writeln("\t#flags: " ~				to!string(array2uint(trim(offset+16,2))));
+				//writeln("\t#unitsPerEm: " ~			to!string(array2uint(trim(offset+18,2))));
+				unitsPerEm = array2short(trim(offset+18,2));
+				//writeln("\t#created: " ~			to!string(array2ulong(trim(offset+20,8))));
+				//writeln("\t#modified: " ~			to!string(array2ulong(trim(offset+28,8))));
+				//writeln("\t#xMin: " ~				to!string(array2short(trim(offset+36,2))));
+				xMin = array2short(trim(offset+36,2));
+				//writeln("\t#yMin: " ~				to!string(array2short(trim(offset+38,2))));
+				yMin = array2short(trim(offset+38,2));
+				//writeln("\t#xMax: " ~				to!string(array2short(trim(offset+40,2))));
+				xMax = array2short(trim(offset+40,2));
+				//writeln("\t#yMax: " ~				to!string(array2short(trim(offset+42,2))));
+				yMax = array2short(trim(offset+42,2));
+				//writeln("\t#macStyle: " ~			to!string(array2uint(trim(offset+44,2))));
+				//writeln("\t#lowestRecPPEM: " ~		to!string(array2uint(trim(offset+46,2))));
+				//writeln("\t#fontDirectionHint: " ~	to!string(array2short(trim(offset+48,2))));
+				//writeln("\t#indexToLocFormat: " ~	to!string(array2short(trim(offset+50,2))));
+				//writeln("\t#glyphDataFormat: " ~	to!string(array2short(trim(offset+52,2))));
+				
 				break;
 			case "cmap":
 				//writeln("\t#version: " ~			to!string(array2uint(trim(offset,2))));
@@ -140,21 +153,24 @@ void makeFontMapping(){
 				
 				break;
 			case "hhea":
-				/*
-				writeln("\t#version: " ~			to!string(array2uint(trim(offset,4))));
-				writeln("\t#Ascender: " ~			to!string(array2uint(trim(offset+4,2))));
-				writeln("\t#Descender: " ~			to!string(array2uint(trim(offset+6,2))));
-				writeln("\t#LineGap: " ~			to!string(array2uint(trim(offset+8,2))));
-				writeln("\t#advanceWidthMax: " ~	to!string(array2uint(trim(offset+10,2))));
-				writeln("\t#minLeftSideBearing: " ~ to!string(array2uint(trim(offset+12,2))));
-				writeln("\t#minRightSideBearing: "~ to!string(array2uint(trim(offset+14,2))));
-				writeln("\t#xMaxExtent: " ~			to!string(array2uint(trim(offset+16,2))));
-				writeln("\t#caretSlopeRise: " ~		to!string(array2uint(trim(offset+18,2))));
-				writeln("\t#caretSlopeRun: " ~		to!string(array2uint(trim(offset+20,2))));
-				writeln("\t#caretOffset: " ~		to!string(array2uint(trim(offset+22,2))));
-				writeln("\t#metricDataFormat: " ~	to!string(array2uint(trim(offset+32,2))));
-				writeln("\t#numberOfHMetrics: " ~	to!string(array2uint(trim(offset+34,2))));
-				*/
+				
+				//writeln("\t#version: " ~			to!string(array2uint(trim(offset,4))));
+				//writeln("\t#Ascender: " ~			to!string(array2uint(trim(offset+4,2))));
+				ascender = array2short(trim(offset+4,2));
+				//writeln("\t#Descender: " ~			to!string(array2short(trim(offset+6,2))));
+				descender = array2short(trim(offset+6,2));
+				//writeln("\t#LineGap: " ~			to!string(array2uint(trim(offset+8,2))));
+				lineGap = array2short(trim(offset+8,2));
+				//writeln("\t#advanceWidthMax: " ~	to!string(array2uint(trim(offset+10,2))));
+				//writeln("\t#minLeftSideBearing: " ~ to!string(array2uint(trim(offset+12,2))));
+				//writeln("\t#minRightSideBearing: "~ to!string(array2uint(trim(offset+14,2))));
+				//writeln("\t#xMaxExtent: " ~			to!string(array2uint(trim(offset+16,2))));
+				//writeln("\t#caretSlopeRise: " ~		to!string(array2uint(trim(offset+18,2))));
+				//writeln("\t#caretSlopeRun: " ~		to!string(array2uint(trim(offset+20,2))));
+				//writeln("\t#caretOffset: " ~		to!string(array2uint(trim(offset+22,2))));
+				//writeln("\t#metricDataFormat: " ~	to!string(array2uint(trim(offset+32,2))));
+				//writeln("\t#numberOfHMetrics: " ~	to!string(array2uint(trim(offset+34,2))));
+				
 				numberOfHMetrics = array2uint(trim(offset+34,2));
 				break;
 			case "hmtx":

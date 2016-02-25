@@ -197,10 +197,6 @@ void construct(){
 												new pdfObject("array",[
 													new pdfObject("refer",6)
 												])
-											),
-											new pdfObject("recoad",
-												new pdfObject("name","DW"),
-												new pdfObject("number",1000)
 											)
 										])
 									)
@@ -253,6 +249,10 @@ void construct(){
 							new pdfObject("recoad",
 								new pdfObject("name","W"),
 								Wentry
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","DW"),
+								new pdfObject("number",1000)
 							)
 						])
 					]);
@@ -274,10 +274,10 @@ void construct(){
 							new pdfObject("recoad",
 								new pdfObject("name","FontBBox"),
 								new pdfObject("array",[
-									new pdfObject("number",-437),
-									new pdfObject("number",-340),
-									new pdfObject("number",1147),
-									new pdfObject("number",1317)
+									new pdfObject("number",to!int(xMin)),
+									new pdfObject("number",to!int(yMin)),
+									new pdfObject("number",to!int(xMax)),
+									new pdfObject("number",to!int(yMax))
 								])
 							),
 							new pdfObject("recoad",
@@ -286,11 +286,11 @@ void construct(){
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","Ascent"),
-								new pdfObject("number",1317)
+								new pdfObject("number",to!int(ascender))
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","Descent"),
-								new pdfObject("number",-349)
+								new pdfObject("number",to!int(descender))
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","CapHeight"),
