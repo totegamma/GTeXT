@@ -13,36 +13,51 @@ import std.stdio;
 import std.conv;
 import std.format;
 import std.array;
-import std.utf;
 import std.string;
-
+import std.file;
+import std.path;
 
 void main(){
-	int numOfTable = array2uint(trim(4,2));
+	auto fout = File("fontDictionary","w");
+	foreach (string name; dirEntries("/Library/Fonts", SpanMode.depth)){
+		if(name[$-4..$] == ".otf" || name[$-4..$] == ".ttf"){
+			fout.writeln(getFontName(name) ~ " " ~ name);
+		}
+	}	
+	foreach (string name; dirEntries(expandTilde("~/Library/Fonts"), SpanMode.depth)){
+		if(name[$-4..$] == ".otf" || name[$-4..$] == ".ttf"){
+			fout.writeln(getFontName(name) ~ " " ~ name);
+		}
+	}
+}
+
+string getFontName(string filename){
+	int numOfTable = array2uint(trim(4,2, filename));
 	uint numberOfHMetrics;
+	string fontName;
 	for(int i; i<numOfTable; i++){
-		string tag		= array2string(trim(12 +16*i, 4));
-		uint checkSum	= array2uint(trim(16 +16*i, 4));
-		uint offset		= array2uint(trim(20 +16*i, 4));
-		uint dataLength = array2uint(trim(24 +16*i, 4));
+		string tag		= array2string(trim(12 +16*i, 4, filename));
+		uint checkSum	= array2uint(trim(16 +16*i, 4, filename));
+		uint offset		= array2uint(trim(20 +16*i, 4, filename));
+		uint dataLength = array2uint(trim(24 +16*i, 4, filename));
 		if(tag == "name"){
-			uint count = array2uint(trim(offset + 2,2));
-			uint stringOffset = array2uint(trim(offset + 4,2));
+			uint count = array2uint(trim(offset + 2,2, filename));
+			uint stringOffset = array2uint(trim(offset + 4,2, filename));
 			for(int j; j < count; j++){
-				uint length = array2uint(trim(offset + 14 +12*j, 2));
-				uint stringOffsetOffset = array2uint(trim(offset + 16 +12*j, 2));
-				if(array2uint(trim(offset + 12 +12*j, 2)) == 4){
-					string fontName = translate(array2string(trim(offset +stringOffset +stringOffsetOffset ,length)),[' ' : '_']);
-					writeln("fontName: " ~ fontName);
+				uint length = array2uint(trim(offset + 14 +12*j, 2, filename));
+				uint stringOffsetOffset = array2uint(trim(offset + 16 +12*j, 2, filename));
+				if(array2uint(trim(offset + 12 +12*j, 2, filename)) == 4){
+					fontName = translate(array2string(trim(offset +stringOffset +stringOffsetOffset ,length, filename)),[' ' : '_']);
 					break;
 				}
 			}
 		}
 	}
+	return fontName;
 }
 
-ubyte[] trim(int from,int length){
-	auto fin = File("resources/fonts/KozGoPr6N-Medium.otf","rb");
+ubyte[] trim(int from,int length,string filename){
+	auto fin = File(filename,"rb");
 	ubyte buffer[] = new ubyte[length];
 	fin.seek(from);
 	fin.rawRead(buffer);
