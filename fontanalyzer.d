@@ -104,30 +104,6 @@ void makeFontMapping(){
 					advanceWidth ~= array2uint(trim(offset+4*j,2));
 				}
 				break;
-			case "name":
-				//writeln("\t#format: " ~ to!string(array2uint(trim(offset,2))));
-				//writeln("\t#count: " ~ to!string(array2uint(trim(offset + 2,2))));
-				uint count = array2uint(trim(offset + 2,2));
-				//writeln("\t#stringOffset: " ~ to!string(array2uint(trim(offset + 4,2))));
-				uint stringOffset = array2uint(trim(offset + 4,2));
-				for(int j; j < count; j++){
-					//writeln("\tNameRecord: " ~ to!string(j));
-					//writeln("\t\t#platformID: " ~	to!string(array2uint(trim(offset +  6 +12*j, 2))));
-					//writeln("\t\t#encodingID: " ~	to!string(array2uint(trim(offset +  8 +12*j, 2))));
-					//writeln("\t\t#languageID: " ~	to!string(array2uint(trim(offset + 10 +12*j, 2))));
-					//writeln("\t\t#nameID: " ~		to!string(array2uint(trim(offset + 12 +12*j, 2))));
-					//writeln("\t\t#length: " ~		to!string(array2uint(trim(offset + 14 +12*j, 2))));
-					uint length = array2uint(trim(offset + 14 +12*j, 2));
-					//writeln("\t\t#offset: " ~		to!string(array2uint(trim(offset + 16 +12*j, 2))));
-					uint stringOffsetOffset = array2uint(trim(offset + 16 +12*j, 2));
-					//writeln("\t\t#string: " ~ array2string(trim(offset +stringOffset +stringOffsetOffset ,length)));
-					if(array2uint(trim(offset + 12 +12*j, 2)) == 4){
-						string fontName = translate(array2string(trim(offset +stringOffset +stringOffsetOffset ,length)),[' ' : '_']);
-						writeln("fontName: " ~ fontName);
-						break;
-					}
-				}
-				break;
 			default:
 				break;
 		}

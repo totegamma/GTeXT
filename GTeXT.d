@@ -32,11 +32,28 @@ const string outputFile = "output.pdf";
 pdfObject[] pdfObjects;
 uint[] distanceFromTop;
 
+struct fontInfo{
+	string fontID;
+	string subtype;
+	string baseFont;
+	string registry;
+	string ordering;
+	string supplement;
+	string type;
+	string flags;
+	int[4] fontBBox;
+	int italicangle;
+	int ascent;
+	int descender;
+	
+}
+
 void main(){
 
 	parse();		//input.gtの解析
 	construct();	//PDFの構造体を作る
 	outputpdf();	//構造体を元に実際にPDFを書き出す
+
 }
 
 
