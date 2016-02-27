@@ -33,18 +33,20 @@ pdfObject[] pdfObjects;
 uint[] distanceFromTop;
 
 struct fontInfo{
-	string fontID;
-	string subtype;
-	string baseFont;
-	string registry;
-	string ordering;
-	string supplement;
-	string type;
-	string flags;
+	string fontID;		//e.g. F0
+	string subtype;		//e.g. Type0
+	string encoding;	//e.g. Identity-H
+	string baseFont;	//e.g. KozGoPr6N-Medium
+	string registry;	//e.g. Adobe
+	string ordering;	//e.g. Japan1
+	int supplement;		//e.g. 6
+	string flags;		//e.g. 4
 	int[4] fontBBox;
-	int italicangle;
+	int italicangle;	//e.g. 0
 	int ascent;
 	int descender;
+	int[] W;
+	int WD;
 	
 }
 
