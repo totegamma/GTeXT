@@ -133,7 +133,6 @@ class pdfObject{
 					outputstr ~= to!string(id) ~ " 0 R ";
 				}
 				outputstr ~= "]";
-				size += outputstr.length;
 				return outputstr;
 				break;
 			case "null":

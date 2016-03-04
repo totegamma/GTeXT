@@ -308,8 +308,6 @@ void parse(){
 					break;
 				case "setFontSize":
 					auto argDict = argumentAnalyzer(elem.argument);
-					//writeln("bo");
-					//writeln(argDict["_default_"]);
 					currentFontSize = to!int(argDict["_default_"]);
 					break;
 				default:
@@ -326,18 +324,15 @@ void parse(){
 		streamBuff ~= "1. 0. 0. 1. " ~ to!string(padding[0]) ~ ". " ~ to!string(currentHeight) ~ ". Tm ";
 		streamBuff ~= eachLine.stream;
 	}
-	streamBuff ~= "ET";
+	streamBuff ~= "ET\n";
 
 	sort!("a.cid < b.cid")(widthCidMapping);
-	//writeln(widthCidMapping);
 	foreach(a; widthCidMapping){
 		if(a.width==1000)continue;
 		W ~= a.cid;
 		W ~= a.cid;
 		W ~= a.width;
 	}
-	//writeln(W);
-
 }
 
 
