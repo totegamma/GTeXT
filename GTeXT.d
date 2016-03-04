@@ -47,8 +47,9 @@ struct fontInfo{
 	int descender;
 	int[] W;
 	int WD;
-	
 }
+
+fontInfo[] fonts;
 
 void main(){
 
@@ -105,7 +106,7 @@ void construct(){
 	pdfObjects ~= new pdfObject("null");
 	
 	//1 0 obj Info
-	pdfObjects ~=	new pdfObject("object",[
+	pdfObjects ~=	new pdfObject("object","info",[
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Title"),
@@ -123,7 +124,7 @@ void construct(){
 					]);
 
 	//2 0 obj Root
-	pdfObjects ~=	new pdfObject("object",[
+	pdfObjects ~=	new pdfObject("object","root",[
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Pages"),
@@ -137,7 +138,7 @@ void construct(){
 					]);
 
 	//3 0 obj
-	pdfObjects ~=	new pdfObject("object",[
+	pdfObjects ~=	new pdfObject("object","pages",[
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Type"),
@@ -157,7 +158,7 @@ void construct(){
 					]);
 
 	//4 0 obj
-	pdfObjects ~=	new pdfObject("object",[
+	pdfObjects ~=	new pdfObject("object","page",[
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Type"),
@@ -187,7 +188,7 @@ void construct(){
 						])
 					]);
 	//5 0 obj
-	pdfObjects ~=	new pdfObject("object",[
+	pdfObjects ~=	new pdfObject("object","resources",[
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Font"),
@@ -230,7 +231,7 @@ void construct(){
 	}
 
 	//6 0 obj
-	pdfObjects ~=	new pdfObject("object",[
+	pdfObjects ~=	new pdfObject("object","font",[
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Type"),
@@ -276,7 +277,7 @@ void construct(){
 						])
 					]);
 	//7 0 obj
-	pdfObjects ~=	new pdfObject("object",[
+	pdfObjects ~=	new pdfObject("object","fontDescriptor",[
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Type"),
@@ -323,7 +324,7 @@ void construct(){
 						])
 					]);
 	//8 0 obj
-	pdfObjects ~=	new pdfObject("object",[
+	pdfObjects ~=	new pdfObject("object","content",[
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Length"),

@@ -34,9 +34,9 @@ class pdfObject{
 	string str;
 
 	pdfObject[] object;
+	string objectType;
 
 	uint refer;
-
 
 	this(string in0,...){
 		type = in0;
@@ -64,6 +64,7 @@ class pdfObject{
 				str = va_arg!string(_argptr);
 				break;
 			case "object":
+				objectType = va_arg!string(_argptr);
 				object = va_arg!(pdfObject[])(_argptr);
 				break;
 			case "refer":
