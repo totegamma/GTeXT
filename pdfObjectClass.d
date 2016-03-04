@@ -13,6 +13,7 @@ import core.vararg;
 import std.conv;
 
 uint size = 15;
+pdfObject[] pdfObjects;
 
 //pdfを表現する構造体の定義
 class pdfObject{
@@ -36,7 +37,7 @@ class pdfObject{
 	pdfObject[] object;
 	string objectType;
 
-	uint refer;
+	string refer;
 
 	this(string in0,...){
 		type = in0;
@@ -68,7 +69,10 @@ class pdfObject{
 				object = va_arg!(pdfObject[])(_argptr);
 				break;
 			case "refer":
-				refer = va_arg!uint(_argptr);
+				refer = va_arg!string(_argptr);
+				break;
+			case "refarray":
+				refer = va_arg!string(_argptr);
 				break;
 			case "null":
 				break;
@@ -120,7 +124,17 @@ class pdfObject{
 				return outputstr;
 				break;
 			case "refer":
-				return to!string(refer) ~ " 0 R";
+				return to!string(getObjID(refer)[0]) ~ " 0 R";
+				break;
+			case "refarray":
+				string outputstr = "[ ";
+				uint[] idList = getObjID(refer);
+				foreach(id;idList){
+					outputstr ~= to!string(id) ~ " 0 R ";
+				}
+				outputstr ~= "]";
+				size += outputstr.length;
+				return outputstr;
 				break;
 			case "null":
 				return "";
@@ -130,5 +144,17 @@ class pdfObject{
 		}
 		return "error:" ~ type;
 	}
-	
+}
+
+uint[] getObjID(string in0){
+	uint idList[];
+	foreach(uint i, obj; pdfObjects){
+		if(obj.objectType == in0){
+			idList ~= i;
+		}
+	}
+	return idList;
+}
+
+void debugger(){
 }

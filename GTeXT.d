@@ -29,7 +29,6 @@ import pdfObjectClass;
 import parser;
 
 const string outputFile = "output.pdf";
-pdfObject[] pdfObjects;
 uint[] distanceFromTop;
 
 struct fontInfo{
@@ -55,6 +54,7 @@ void main(){
 
 	parse();		//input.gtの解析
 	construct();	//PDFの構造体を作る
+	debugger();
 	outputpdf();	//構造体を元に実際にPDFを書き出す
 
 }
@@ -128,7 +128,7 @@ void construct(){
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Pages"),
-								new pdfObject("refer",3)
+								new pdfObject("refer","page")
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","Type"),
@@ -146,9 +146,7 @@ void construct(){
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","Kids"),
-								new pdfObject("array",[
-									new pdfObject("refer",4)
-								])
+								new pdfObject("refarray","page")
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","Count"),
@@ -166,11 +164,11 @@ void construct(){
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","Parent"),
-								new pdfObject("refer",3)
+								new pdfObject("refer","pages")
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","Resources"),
-								new pdfObject("refer",5)
+								new pdfObject("refer","resources")
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","MediaBox"),
@@ -183,7 +181,7 @@ void construct(){
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","Contents"),
-								new pdfObject("refer",8)
+								new pdfObject("refer","content")
 							)
 						])
 					]);
@@ -195,31 +193,35 @@ void construct(){
 								new pdfObject("dictionary",[
 									new pdfObject("recoad",
 										new pdfObject("name","F0"),
-										new pdfObject("dictionary",[
-											new pdfObject("recoad",
-												new pdfObject("name","Type"),
-												new pdfObject("name","Font")
-											),
-											new pdfObject("recoad",
-												new pdfObject("name","BaseFont"),
-												new pdfObject("name","KozGoPr6N-Medium")
-											),
-											new pdfObject("recoad",
-												new pdfObject("name","Subtype"),
-												new pdfObject("name","Type0")
-											),
-											new pdfObject("recoad",
-												new pdfObject("name","Encoding"),
-												new pdfObject("name","Identity-H")
-											),
-											new pdfObject("recoad",
-												new pdfObject("name","DescendantFonts"),
-												new pdfObject("array",[
-													new pdfObject("refer",6)
-												])
-											)
-										])
+										new pdfObject("refer","font")
 									)
+								])
+							)
+						])
+					]);
+
+	pdfObjects ~=	new pdfObject("object","font",[
+						new pdfObject("dictionary",[
+							new pdfObject("recoad",
+								new pdfObject("name","Type"),
+								new pdfObject("name","Font")
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","BaseFont"),
+								new pdfObject("name","KozGoPr6N-Medium")
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","Subtype"),
+								new pdfObject("name","Type0")
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","Encoding"),
+								new pdfObject("name","Identity-H")
+							),
+							new pdfObject("recoad",
+								new pdfObject("name","DescendantFonts"),
+								new pdfObject("array",[
+									new pdfObject("refer","decendantFonts")
 								])
 							)
 						])
@@ -231,7 +233,7 @@ void construct(){
 	}
 
 	//6 0 obj
-	pdfObjects ~=	new pdfObject("object","font",[
+	pdfObjects ~=	new pdfObject("object","decendantFonts",[
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Type"),
@@ -264,7 +266,7 @@ void construct(){
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","FontDescriptor"),
-								new pdfObject("refer",7)
+								new pdfObject("refer","fontDescriptor")
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","W"),
@@ -333,8 +335,6 @@ void construct(){
 						]),
 						new pdfObject("stream",streamBuff)
 					]);
-
-
 
 }
 
