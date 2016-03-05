@@ -106,7 +106,7 @@ void construct(){
 	pdfObjects ~= new pdfObject("null");
 	
 	//1 0 obj Info
-	pdfObjects ~=	new pdfObject("object","info",[
+	pdfObjects ~=	new pdfObject("object", "info", 0, [
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Title"),
@@ -124,11 +124,11 @@ void construct(){
 					]);
 
 	//2 0 obj Root
-	pdfObjects ~=	new pdfObject("object","root",[
+	pdfObjects ~=	new pdfObject("object", "root", 0, [
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Pages"),
-								new pdfObject("refer","page")
+								new pdfObject("refer","page",0)
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","Type"),
@@ -138,7 +138,7 @@ void construct(){
 					]);
 
 	//3 0 obj
-	pdfObjects ~=	new pdfObject("object","pages",[
+	pdfObjects ~=	new pdfObject("object", "pages", 0, [
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Type"),
@@ -156,7 +156,7 @@ void construct(){
 					]);
 
 	//4 0 obj
-	pdfObjects ~=	new pdfObject("object","page",[
+	pdfObjects ~=	new pdfObject("object", "page", 0, [
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Type"),
@@ -164,11 +164,11 @@ void construct(){
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","Parent"),
-								new pdfObject("refer","pages")
+								new pdfObject("refer","pages",0)
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","Resources"),
-								new pdfObject("refer","resources")
+								new pdfObject("refer","resources",0)
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","MediaBox"),
@@ -181,26 +181,26 @@ void construct(){
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","Contents"),
-								new pdfObject("refer","content")
+								new pdfObject("refer","content",0)
 							)
 						])
 					]);
 	//5 0 obj
-	pdfObjects ~=	new pdfObject("object","resources",[
+	pdfObjects ~=	new pdfObject("object", "resources", 0, [
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Font"),
 								new pdfObject("dictionary",[
 									new pdfObject("recoad",
 										new pdfObject("name","F0"),
-										new pdfObject("refer","font")
+										new pdfObject("refer","font",0)
 									)
 								])
 							)
 						])
 					]);
 
-	pdfObjects ~=	new pdfObject("object","font",[
+	pdfObjects ~=	new pdfObject("object", "font", 0, [
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Type"),
@@ -221,7 +221,7 @@ void construct(){
 							new pdfObject("recoad",
 								new pdfObject("name","DescendantFonts"),
 								new pdfObject("array",[
-									new pdfObject("refer","decendantFonts")
+									new pdfObject("refer","decendantFonts",0)
 								])
 							)
 						])
@@ -233,7 +233,7 @@ void construct(){
 	}
 
 	//6 0 obj
-	pdfObjects ~=	new pdfObject("object","decendantFonts",[
+	pdfObjects ~=	new pdfObject("object", "decendantFonts", 0, [
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Type"),
@@ -266,7 +266,7 @@ void construct(){
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","FontDescriptor"),
-								new pdfObject("refer","fontDescriptor")
+								new pdfObject("refer","fontDescriptor",0)
 							),
 							new pdfObject("recoad",
 								new pdfObject("name","W"),
@@ -279,7 +279,7 @@ void construct(){
 						])
 					]);
 	//7 0 obj
-	pdfObjects ~=	new pdfObject("object","fontDescriptor",[
+	pdfObjects ~=	new pdfObject("object", "fontDescriptor", 0, [
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Type"),
@@ -326,7 +326,7 @@ void construct(){
 						])
 					]);
 	//8 0 obj
-	pdfObjects ~=	new pdfObject("object","content",[
+	pdfObjects ~=	new pdfObject("object", "content", 0, [
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Length"),

@@ -36,8 +36,10 @@ class pdfObject{
 
 	pdfObject[] object;
 	string objectType;
+	uint objectID;
 
 	string refer;
+	uint referID;
 
 	this(string in0,...){
 		type = in0;
@@ -66,10 +68,12 @@ class pdfObject{
 				break;
 			case "object":
 				objectType = va_arg!string(_argptr);
+				objectID= va_arg!uint(_argptr);
 				object = va_arg!(pdfObject[])(_argptr);
 				break;
 			case "refer":
 				refer = va_arg!string(_argptr);
+				referID= va_arg!uint(_argptr);
 				break;
 			case "refarray":
 				refer = va_arg!string(_argptr);
@@ -124,11 +128,11 @@ class pdfObject{
 				return outputstr;
 				break;
 			case "refer":
-				return to!string(getObjID(refer)[0]) ~ " 0 R";
+				return to!string(getObjID(refer,referID)) ~ " 0 R";
 				break;
 			case "refarray":
 				string outputstr = "[ ";
-				uint[] idList = getObjID(refer);
+				uint[] idList = getObjIDarr(refer);
 				foreach(id;idList){
 					outputstr ~= to!string(id) ~ " 0 R ";
 				}
@@ -145,7 +149,17 @@ class pdfObject{
 	}
 }
 
-uint[] getObjID(string in0){
+uint getObjID(string in0, uint in1){
+	foreach(uint i, obj; pdfObjects){
+		if(obj.objectType == in0 && obj.objectID== in1){
+			return i;
+		}
+	}
+	writeln("error: 参照したいオブジェクトが見つかりません");
+	return 0;
+}
+
+uint[] getObjIDarr(string in0){
 	uint idList[];
 	foreach(uint i, obj; pdfObjects){
 		if(obj.objectType == in0){
