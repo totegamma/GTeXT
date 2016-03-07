@@ -31,25 +31,6 @@ import parser;
 const string outputFile = "output.pdf";
 uint[] distanceFromTop;
 
-struct fontInfo{
-	string fontID;		//e.g. F0
-	string subtype;		//e.g. Type0
-	string encoding;	//e.g. Identity-H
-	string baseFont;	//e.g. KozGoPr6N-Medium
-	string registry;	//e.g. Adobe
-	string ordering;	//e.g. Japan1
-	int supplement;		//e.g. 6
-	string flags;		//e.g. 4
-	int[4] fontBBox;
-	int italicangle;	//e.g. 0
-	int ascent;
-	int descender;
-	int[] W;
-	int WD;
-}
-
-fontInfo[] fonts;
-
 void main(){
 
 	parse();		//input.gtの解析
@@ -185,146 +166,161 @@ void construct(){
 							)
 						])
 					]);
+
+	fonts ~= fontInfo("F0","Type0","CIDFontType0","Identity-H","KozGoPr6N-Medium","Adobe","Japan1",6,4,[-538, -374, 1254, 1418],0,880,-120,[],1000);
+
+	pdfObject fontList = new pdfObject("dictionary",[]);
+	foreach(i, font; fonts){
+		writeln("hi");
+		fontList.dictionary ~=	new pdfObject("recoad",
+									new pdfObject("name","F" ~ to!string(i)),
+									new pdfObject("refer","font",i)
+							);
+	}
 	//5 0 obj
 	pdfObjects ~=	new pdfObject("object", "resources", 0, [
 						new pdfObject("dictionary",[
 							new pdfObject("recoad",
 								new pdfObject("name","Font"),
-								new pdfObject("dictionary",[
-									new pdfObject("recoad",
-										new pdfObject("name","F0"),
-										new pdfObject("refer","font",0)
-									)
-								])
+								fontList
 							)
 						])
 					]);
 
-	pdfObjects ~=	new pdfObject("object", "font", 0, [
-						new pdfObject("dictionary",[
-							new pdfObject("recoad",
-								new pdfObject("name","Type"),
-								new pdfObject("name","Font")
-							),
-							new pdfObject("recoad",
-								new pdfObject("name","BaseFont"),
-								new pdfObject("name","KozGoPr6N-Medium")
-							),
-							new pdfObject("recoad",
-								new pdfObject("name","Subtype"),
-								new pdfObject("name","Type0")
-							),
-							new pdfObject("recoad",
-								new pdfObject("name","Encoding"),
-								new pdfObject("name","Identity-H")
-							),
-							new pdfObject("recoad",
-								new pdfObject("name","DescendantFonts"),
-								new pdfObject("array",[
-									new pdfObject("refer","decendantFonts",0)
-								])
-							)
-						])
-					]);
 
-	pdfObject Wentry = new pdfObject("array",[]);
-	foreach(Welem;W){
-		Wentry.array ~= new pdfObject("number",Welem);
+	foreach(i, font; fonts){
+		//--ここからフォント項目
+		pdfObjects ~=	new pdfObject("object", "font", i, [
+							new pdfObject("dictionary",[
+								new pdfObject("recoad",
+									new pdfObject("name","Type"),
+									new pdfObject("name","Font")
+								),
+								new pdfObject("recoad",
+									new pdfObject("name","BaseFont"),
+									new pdfObject("name",font.baseFont)
+								),
+								new pdfObject("recoad",
+									new pdfObject("name","Subtype"),
+									new pdfObject("name",font.subtype)
+								),
+								new pdfObject("recoad",
+									new pdfObject("name","Encoding"),
+									new pdfObject("name",font.encoding)
+								),
+								new pdfObject("recoad",
+									new pdfObject("name","DescendantFonts"),
+									new pdfObject("array",[
+										new pdfObject("refer","decendantFonts",i)
+									])
+								)
+							])
+						]);
+
+		pdfObject Wentry = new pdfObject("array",[]);
+		foreach(Welem;font.W){
+			Wentry.array ~= new pdfObject("number",Welem);
+		}
+
+		//6 0 obj
+		pdfObjects ~=	new pdfObject("object", "decendantFonts", i, [
+							new pdfObject("dictionary",[
+								new pdfObject("recoad",
+									new pdfObject("name","Type"),
+									new pdfObject("name","Font")
+								),
+								new pdfObject("recoad",
+									new pdfObject("name","Subtype"),
+									new pdfObject("name",font.cidSubtype)
+								),
+								new pdfObject("recoad",
+									new pdfObject("name","BaseFont"),
+									new pdfObject("name",font.baseFont)
+								),
+								new pdfObject("recoad",
+									new pdfObject("name","CIDSystemInfo"),
+									new pdfObject("dictionary",[
+										new pdfObject("recoad",
+											new pdfObject("name","Registry"),
+											new pdfObject("str",font.registry)
+										),
+										new pdfObject("recoad",
+											new pdfObject("name","Ordering"),
+											new pdfObject("str",font.ordering)
+										),
+										new pdfObject("recoad",
+											new pdfObject("name","Supplement"),
+											new pdfObject("number",font.supplement)
+										)
+									])
+								),
+								new pdfObject("recoad",
+									new pdfObject("name","FontDescriptor"),
+									new pdfObject("refer","fontDescriptor",i)
+								),
+								new pdfObject("recoad",
+									new pdfObject("name","W"),
+									Wentry
+								),
+								new pdfObject("recoad",
+									new pdfObject("name","DW"),
+									new pdfObject("number",font.WD)
+								)
+							])
+						]);
+		//7 0 obj
+		pdfObjects ~=	new pdfObject("object", "fontDescriptor", i, [
+							new pdfObject("dictionary",[
+								new pdfObject("recoad",
+									new pdfObject("name","Type"),
+									new pdfObject("name","FontDescriptor")
+								),
+								new pdfObject("recoad",
+									new pdfObject("name","FontName"),
+									new pdfObject("name",font.baseFont)
+								),
+								new pdfObject("recoad",
+									new pdfObject("name","Flags"),
+									new pdfObject("number",font.flags)
+								),
+								new pdfObject("recoad",
+									new pdfObject("name","FontBBox"),
+									new pdfObject("array",[
+										new pdfObject("number",to!int(font.fontBBox[0])),
+										new pdfObject("number",to!int(font.fontBBox[1])),
+										new pdfObject("number",to!int(font.fontBBox[2])),
+										new pdfObject("number",to!int(font.fontBBox[3]))
+									])
+								),
+								new pdfObject("recoad",
+									new pdfObject("name","ItalicAngle"),
+									new pdfObject("number",font.italicangle)
+								),
+								new pdfObject("recoad",
+									new pdfObject("name","Ascent"),
+									new pdfObject("number",to!int(font.ascent))
+								),
+								new pdfObject("recoad",
+									new pdfObject("name","Descent"),
+									new pdfObject("number",to!int(font.descender))
+								)/*,
+								new pdfObject("recoad",
+									new pdfObject("name","CapHeight"),
+									new pdfObject("number",742)
+								),
+								new pdfObject("recoad",
+									new pdfObject("name","StemV"),
+									new pdfObject("number",80)
+								)
+								*/
+							])
+						]);
 	}
 
-	//6 0 obj
-	pdfObjects ~=	new pdfObject("object", "decendantFonts", 0, [
-						new pdfObject("dictionary",[
-							new pdfObject("recoad",
-								new pdfObject("name","Type"),
-								new pdfObject("name","Font")
-							),
-							new pdfObject("recoad",
-								new pdfObject("name","Subtype"),
-								new pdfObject("name","CIDFontType0")
-							),
-							new pdfObject("recoad",
-								new pdfObject("name","BaseFont"),
-								new pdfObject("name","KozGoPr6N-Medium")
-							),
-							new pdfObject("recoad",
-								new pdfObject("name","CIDSystemInfo"),
-								new pdfObject("dictionary",[
-									new pdfObject("recoad",
-										new pdfObject("name","Registry"),
-										new pdfObject("str","Adobe")
-									),
-									new pdfObject("recoad",
-										new pdfObject("name","Ordering"),
-										new pdfObject("str","Japan1")
-									),
-									new pdfObject("recoad",
-										new pdfObject("name","Supplement"),
-										new pdfObject("number",6)
-									)
-								])
-							),
-							new pdfObject("recoad",
-								new pdfObject("name","FontDescriptor"),
-								new pdfObject("refer","fontDescriptor",0)
-							),
-							new pdfObject("recoad",
-								new pdfObject("name","W"),
-								Wentry
-							),
-							new pdfObject("recoad",
-								new pdfObject("name","DW"),
-								new pdfObject("number",1000)
-							)
-						])
-					]);
-	//7 0 obj
-	pdfObjects ~=	new pdfObject("object", "fontDescriptor", 0, [
-						new pdfObject("dictionary",[
-							new pdfObject("recoad",
-								new pdfObject("name","Type"),
-								new pdfObject("name","FontDescriptor")
-							),
-							new pdfObject("recoad",
-								new pdfObject("name","FontName"),
-								new pdfObject("name","KozGoPr6N-Medium")
-							),
-							new pdfObject("recoad",
-								new pdfObject("name","Flags"),
-								new pdfObject("number",4)
-							),
-							new pdfObject("recoad",
-								new pdfObject("name","FontBBox"),
-								new pdfObject("array",[
-									new pdfObject("number",to!int(xMin)),
-									new pdfObject("number",to!int(yMin)),
-									new pdfObject("number",to!int(xMax)),
-									new pdfObject("number",to!int(yMax))
-								])
-							),
-							new pdfObject("recoad",
-								new pdfObject("name","ItalicAngle"),
-								new pdfObject("number",0)
-							),
-							new pdfObject("recoad",
-								new pdfObject("name","Ascent"),
-								new pdfObject("number",to!int(ascender))
-							),
-							new pdfObject("recoad",
-								new pdfObject("name","Descent"),
-								new pdfObject("number",to!int(descender))
-							)/*,
-							new pdfObject("recoad",
-								new pdfObject("name","CapHeight"),
-								new pdfObject("number",742)
-							),
-							new pdfObject("recoad",
-								new pdfObject("name","StemV"),
-								new pdfObject("number",80)
-							)
-							*/
-						])
-					]);
+
+
+	//-----------------------------フォント項目ここまで
+
 	//8 0 obj
 	pdfObjects ~=	new pdfObject("object", "content", 0, [
 						new pdfObject("dictionary",[

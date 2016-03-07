@@ -17,7 +17,26 @@ import std.array;
 import std.utf;
 import std.string;
 
+struct fontInfo{
+	string fontID;		//e.g. F0
+	string subtype;		//e.g. Type0
+	string cidSubtype;	//e.g. CIDFontType0
+	string encoding;	//e.g. Identity-H
+	string baseFont;	//e.g. KozGoPr6N-Medium
+	string registry;	//e.g. Adobe
+	string ordering;	//e.g. Japan1
+	int supplement;		//e.g. 6
+	int flags;		//e.g. 4
+	int[4] fontBBox;
+	int italicangle;	//e.g. 0
+	int ascent;
+	int descender;
+	int[] W;
+	int WD;
+}
+
 uint[uint] charCodeToGlyphId;
+fontInfo[] fonts;
 
 uint[] advanceWidth;
 short unitsPerEm;
@@ -28,6 +47,11 @@ short yMax;
 short ascender;
 short descender;
 short lineGap;
+
+
+void addNewFont(string filePath){
+	
+}
 
 
 void makeFontMapping(){
