@@ -18,7 +18,8 @@ import std.utf;
 import std.string;
 
 struct fontInfo{
-	string fontID;		//e.g. F0
+	string fontName;
+	string fontPath;
 	string subtype;		//e.g. Type0
 	string cidSubtype;	//e.g. CIDFontType0
 	string encoding;	//e.g. Identity-H
@@ -49,8 +50,26 @@ short descender;
 short lineGap;
 
 
-void addNewFont(string filePath){
-	
+void addNewFont(string fileName){
+
+	string fontPath;
+
+	//パスを入手
+	auto fin = File("fontDictionary","r");
+	string line;
+	while(!fin.eof){
+		line = fin.readln.chomp;
+		string[] dataPair = line.split(' ');
+		if(dataPair.length >= 2){
+			if(dataPair[0] == fileName){
+				fontPath = dataPair[1];
+				break;
+			}
+		}
+	}
+	if(fontPath == ""){
+		writeln("error!: font not found.");
+	}
 }
 
 
