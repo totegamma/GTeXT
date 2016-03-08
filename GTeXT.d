@@ -35,10 +35,9 @@ void main(){
 
 	addNewFont("Kozuka_Gothic_Pr6N_M");
 
-	//parse();		//input.gtの解析
-	//construct();	//PDFの構造体を作る
-	//debugger();
-	//outputpdf();	//構造体を元に実際にPDFを書き出す
+	parse();		//input.gtの解析
+	construct();	//PDFの構造体を作る
+	outputpdf();	//構造体を元に実際にPDFを書き出す
 
 }
 
@@ -169,11 +168,8 @@ void construct(){
 						])
 					]);
 
-	fonts ~= fontInfo("KozGo","resources/fonts/KozGoPr6N-Medium.otf","Type0","CIDFontType0","Identity-H","KozGoPr6N-Medium","Adobe","Japan1",6,4,[-538, -374, 1254, 1418],0,880,-120,[],1000);
-
 	pdfObject fontList = new pdfObject("dictionary",[]);
 	foreach(i, font; fonts){
-		writeln("hi");
 		fontList.dictionary ~=	new pdfObject("recoad",
 									new pdfObject("name","F" ~ to!string(i)),
 									new pdfObject("refer","font",i)

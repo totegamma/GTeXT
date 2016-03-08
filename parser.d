@@ -44,7 +44,7 @@ int[4] padding = [28, 28, 28, 28]; //10mmのパディング
 int currentFontSize = 20;
 string streamBuff;
 
-uint[] W;
+//uint[] W;
 
 //文章を要素ごとに分割する際、それを格納する構造体
 struct sentence{
@@ -64,12 +64,6 @@ class outputline{
 
 outputline[] outputlines;
 
-struct widthCidStruct{
-	uint cid;
-	uint width;
-}
-
-widthCidStruct[] widthCidMapping;
 
 void parse(){
 
@@ -80,7 +74,6 @@ void parse(){
 
 	//cmapファイルをの読み込み
 	loadcmap.loadcmap();
-	makeFontMapping();
 
 	//解析に使う変数
 	string line;
@@ -256,16 +249,17 @@ void parse(){
 	outputline newline = new outputline;
 	uint currentWidth;
 	string stringbuff;
+	uint currentFont;
 
 	foreach(elem; sentences){
 		if(elem.type == "normal"){
 			foreach(str;array(elem.content)){
 				string cid = string2cid(to!string(str));
 				uint ciduint = to!uint(cid,16);
-				uint advanceWidth = getAdvanceWidth(to!string(str));
+				uint advanceWidth = getAdvanceWidth(to!string(str),currentFont);
 				currentWidth += currentFontSize*advanceWidth;
 				//writeln(width);
-				if(currentWidth > (paperSize[2] - padding[0] - padding[1] - 10)*unitsPerEm){ //改行するタイミング
+				if(currentWidth > (paperSize[2] - padding[0] - padding[1] - 10)*fonts[currentFont].unitsPerEm){ //改行するタイミング
 					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";
 					outputlines ~= newline;
 					newline = new outputline;
@@ -280,14 +274,14 @@ void parse(){
 				
 				stringbuff ~= cid;
 				bool flag = true;;
-				foreach(a;widthCidMapping){
+				foreach(a;fonts[currentFont].widthCidMapping){
 					if(a.cid == ciduint){
 						flag = false;
 						break;
 					}
 				}
 				if(flag == true){
-					widthCidMapping ~= widthCidStruct(ciduint,advanceWidth);
+					fonts[currentFont].widthCidMapping ~= widthCidStruct(ciduint,advanceWidth);
 				}
 			}
 			
@@ -304,7 +298,7 @@ void parse(){
 				case "pi":
 					stringbuff ~= string2cid("π");
 					stringbuff ~= string2cid(" ");
-					currentWidth += currentFontSize*getAdvanceWidth("π");
+					currentWidth += currentFontSize*getAdvanceWidth("π",currentFont);
 					break;
 				case "setFontSize":
 					auto argDict = argumentAnalyzer(elem.argument);
@@ -320,18 +314,18 @@ void parse(){
 	streamBuff ~= "BT\n";
 	uint currentHeight = paperSize[3] - padding[3];
 	foreach(eachLine; outputlines){
-		currentHeight -= eachLine.maxFontSize + lineGap/unitsPerEm;
+		currentHeight -= eachLine.maxFontSize + fonts[currentFont].lineGap/fonts[currentFont].unitsPerEm;
 		streamBuff ~= "1. 0. 0. 1. " ~ to!string(padding[0]) ~ ". " ~ to!string(currentHeight) ~ ". Tm ";
 		streamBuff ~= eachLine.stream;
 	}
 	streamBuff ~= "ET\n";
 
-	sort!("a.cid < b.cid")(widthCidMapping);
-	foreach(a; widthCidMapping){
+	sort!("a.cid < b.cid")(fonts[currentFont].widthCidMapping);
+	foreach(a; fonts[currentFont].widthCidMapping){
 		if(a.width==1000)continue;
-		W ~= a.cid;
-		W ~= a.cid;
-		W ~= a.width;
+		fonts[currentFont].W ~= a.cid;
+		fonts[currentFont].W ~= a.cid;
+		fonts[currentFont].W ~= a.width;
 	}
 }
 
