@@ -102,9 +102,9 @@ void addNewFont(string fileName){
 			case "head":
 				unitsPerEm = array2short(trim(offset+18,2,fontPath));
 				fontBBox[0] = array2short(trim(offset+36,2,fontPath));
-				fontBBox[0] = array2short(trim(offset+38,2,fontPath));
-				fontBBox[0] = array2short(trim(offset+40,2,fontPath));
-				fontBBox[0] = array2short(trim(offset+42,2,fontPath));
+				fontBBox[1] = array2short(trim(offset+38,2,fontPath));
+				fontBBox[2] = array2short(trim(offset+40,2,fontPath));
+				fontBBox[3] = array2short(trim(offset+42,2,fontPath));
 				break;
 			case "cmap":
 				uint numTables =							  array2uint(trim(offset+2,2,fontPath));

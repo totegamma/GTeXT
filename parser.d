@@ -344,10 +344,6 @@ void parse(){
 			font.W ~= a.cid;
 			font.W ~= a.width;
 		}
-		writeln(font.W);
-	}
-	foreach(font;fonts){
-		writeln(font.W);
 	}
 }
 
