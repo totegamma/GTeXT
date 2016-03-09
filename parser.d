@@ -336,7 +336,7 @@ void parse(){
 	}
 	streamBuff ~= "ET\n";
 	
-	foreach(ref font;fonts){
+	foreach(font;fonts){
 		sort!("a.cid < b.cid")(font.widthCidMapping);
 		foreach(a; font.widthCidMapping){
 			if(a.width==1000)continue;
