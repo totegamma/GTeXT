@@ -268,7 +268,7 @@ void parse(){
 				}
 
 				if(newline.stream == ""){
-					newline.stream ~= "/F0 " ~ to!string(currentFontSize) ~ " Tf ";
+					newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
 					newline.maxFontSize = currentFontSize;
 				}
 				
@@ -335,13 +335,19 @@ void parse(){
 		streamBuff ~= eachLine.stream;
 	}
 	streamBuff ~= "ET\n";
-
-	sort!("a.cid < b.cid")(fonts[currentFont].widthCidMapping);
-	foreach(a; fonts[currentFont].widthCidMapping){
-		if(a.width==1000)continue;
-		fonts[currentFont].W ~= a.cid;
-		fonts[currentFont].W ~= a.cid;
-		fonts[currentFont].W ~= a.width;
+	
+	foreach(ref font;fonts){
+		sort!("a.cid < b.cid")(font.widthCidMapping);
+		foreach(a; font.widthCidMapping){
+			if(a.width==1000)continue;
+			font.W ~= a.cid;
+			font.W ~= a.cid;
+			font.W ~= a.width;
+		}
+		writeln(font.W);
+	}
+	foreach(font;fonts){
+		writeln(font.W);
 	}
 }
 

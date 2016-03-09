@@ -79,7 +79,7 @@ void addNewFont(string fileName){
 	string line;
 	while(!fin.eof){
 		line = fin.readln.chomp;
-		string[] dataPair = line.split(' ');
+		string[] dataPair = line.split(';');
 		if(dataPair.length >= 2){
 			if(dataPair[0] == fileName){
 				fontPath = dataPair[1];

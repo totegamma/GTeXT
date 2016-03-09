@@ -31,5 +31,5 @@ The number #pi is a mathematical constant.
 
 消えろ、消えろ、つかの間の灯火！人生は歩きまわる影法師、あわれな役者だ、舞台の上でおおげさにみえをきっても、出場が終われば消えてしまう。
 
-#setFont(Adobe_Arabic_Bold_Italic)
-Font changed to Times New Roman Bold
+#setFont(YuGothic_Bold)
+游ゴシックにフォントを変更 YuGothic_Bold

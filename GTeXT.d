@@ -216,6 +216,7 @@ void construct(){
 						]);
 
 		pdfObject Wentry = new pdfObject("array",[]);
+		//writeln(font.W);
 		foreach(Welem;font.W){
 			Wentry.array ~= new pdfObject("number",Welem);
 		}

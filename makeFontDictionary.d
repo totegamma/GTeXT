@@ -21,12 +21,12 @@ void main(){
 	auto fout = File("fontDictionary","w");
 	foreach (string name; dirEntries("/Library/Fonts", SpanMode.depth)){
 		if(name[$-4..$] == ".otf" || name[$-4..$] == ".ttf"){
-			fout.writeln(getFontName(name) ~ " " ~ name);
+			fout.writeln(getFontName(name) ~ ";" ~ name);
 		}
 	}	
 	foreach (string name; dirEntries(expandTilde("~/Library/Fonts"), SpanMode.depth)){
 		if(name[$-4..$] == ".otf" || name[$-4..$] == ".ttf"){
-			fout.writeln(getFontName(name) ~ " " ~ name);
+			fout.writeln(getFontName(name) ~ ";" ~ name);
 		}
 	}
 }
