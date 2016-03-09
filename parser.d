@@ -304,6 +304,22 @@ void parse(){
 					auto argDict = argumentAnalyzer(elem.argument);
 					currentFontSize = to!int(argDict["_default_"]);
 					break;
+				case "setFont":
+					auto argDict = argumentAnalyzer(elem.argument);
+					string newFontName = to!string(argDict["_default_"]);
+					bool flag = false;
+					foreach(uint i, font; fonts){
+						if(font.fontName == newFontName){
+							currentFont = i;
+							flag = true;
+							break;
+						}
+					}
+					if(flag == false){
+						addNewFont(newFontName);
+						currentFont = to!uint(fonts.length-1);
+					}
+
 				default:
 					break;
 			}
