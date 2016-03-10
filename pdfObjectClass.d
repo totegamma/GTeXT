@@ -169,5 +169,3 @@ uint[] getObjIDarr(string in0){
 	return idList;
 }
 
-void debugger(){
-}
