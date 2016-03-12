@@ -91,6 +91,8 @@ void addNewFont(string fileName){
 		writeln("error!: font not found.(" ~ fileName ~ ")");
 	}
 
+	newFont.fontName = fileName;
+
 	int numOfTable = array2uint(trim(4,2,newFont.fontPath));
 	uint numberOfHMetrics;
 	for(int i; i<numOfTable; i++){

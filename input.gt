@@ -50,3 +50,7 @@ GD-高速道路ゴシックJA-OTF
 
 #setFont(suusiki)
 数式フォント
+
+#setFontSize(20)
+#setFont(APJapanesefont)
+行の途中ですがここでフォントを#setFont(YuGothic_Bold)游ゴシック#setFont(APJapanesefont)に変更させていただきます

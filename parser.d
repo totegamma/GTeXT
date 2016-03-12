@@ -318,7 +318,11 @@ void parse(){
 						addNewFont(newFontName);
 						currentFont = to!uint(fonts.length-1);
 					}
-
+					if(stringbuff != ""){
+						newline.stream ~= "<" ~ stringbuff ~ "> Tj ";
+						stringbuff = "";
+						newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
+					}
 				default:
 					break;
 			}
