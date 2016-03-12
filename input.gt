@@ -35,7 +35,8 @@ The number #pi is a mathematical constant.
 #setFont(01FLOPDESIGN)
 01フロップデザイン#br
 #setFont(Kozuka_Gothic_Pr6N_EL)
-小塚ゴシックPro#br
+小塚ゴシックPro #setFontSize(10)この下には50Ptのギャップ#br(50) 
+#setFontSize(30)
 #setFont(GD-HighwayGothicJA-OTF)
 GD-高速道路ゴシックJA-OTF#br
 #setFont(YuGothic_Bold)

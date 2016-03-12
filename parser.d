@@ -59,6 +59,7 @@ struct sentence{
 
 //行ごとのまとまり
 class outputline{
+	int nextGap;
 	uint maxFontSize;
 	string stream;
 }
@@ -295,6 +296,10 @@ void parse(){
 					stringbuff = "";
 					break;
 				case "br":
+					if(elem.argument != ""){
+						auto argDict = argumentAnalyzer(elem.argument);
+						newline.nextGap = to!int(argDict["_default_"]);
+					}
 					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";
 					outputlines ~= newline;
 					newline = new outputline;
@@ -309,6 +314,11 @@ void parse(){
 				case "setFontSize":
 					auto argDict = argumentAnalyzer(elem.argument);
 					currentFontSize = to!int(argDict["_default_"]);
+					if(stringbuff != ""){
+						newline.stream ~= "<" ~ stringbuff ~ "> Tj ";
+						stringbuff = "";
+						newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
+					}
 					break;
 				case "setFont":
 					auto argDict = argumentAnalyzer(elem.argument);
@@ -334,13 +344,16 @@ void parse(){
 					break;
 			}
 		}
-
 	}
 
 	streamBuff ~= "BT\n";
 	uint currentHeight = paperSize[3] - padding[3];
-	foreach(eachLine; outputlines){
-		currentHeight -= eachLine.maxFontSize + fonts[currentFont].lineGap/fonts[currentFont].unitsPerEm;
+	foreach(uint i, eachLine; outputlines){
+		if(i == 0){
+			currentHeight -= eachLine.maxFontSize + fonts[currentFont].lineGap/fonts[currentFont].unitsPerEm;
+		}else{
+			currentHeight -= eachLine.maxFontSize + outputlines[i-1].nextGap + fonts[currentFont].lineGap/fonts[currentFont].unitsPerEm;
+		}
 		streamBuff ~= "1. 0. 0. 1. " ~ to!string(padding[0]) ~ ". " ~ to!string(currentHeight) ~ ". Tm ";
 		streamBuff ~= eachLine.stream;
 	}
