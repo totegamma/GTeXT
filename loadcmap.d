@@ -17,6 +17,16 @@ import std.utf;
 
 uint[uint] cmap;
 
+//関数 loadcmap
+//
+//CMAPを読み込み連想配列に落とす
+//
+//入力(ファイル)
+//resources/cmap/UniJIS2004-UTF8-H.txt
+//出力(グローバル)
+//uint[uint] cmap
+//
+
 void loadcmap(){
 	string line;
 	string[] sentences;
@@ -58,18 +68,4 @@ void loadcmap(){
 			}
 		}
 	}
-	/*
-	string input = "これはタイトルです";
-	auto writer = appender!string();
-	foreach(c; array(input)) {
-		foreach(b; [c].toUTF8) {
-			formattedWrite(writer,"%x",b);
-		}
-	uint unicode = to!uint(writer.data,16);
-	writer = appender!string();
-	formattedWrite(writer,"%x",cmap[unicode]);
-	writeln(rightJustify(writer.data,4,'0'));
-	writer = appender!string();
-	}
-	*/
 }

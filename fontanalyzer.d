@@ -49,6 +49,15 @@ struct widthCidStruct{
 	uint width;
 }
 
+//関数 addNewFont
+//
+//与えられたフォント名のフォント情報を読み込み、fonts[]に格納する。
+//
+//入力(引数)
+//string fileName
+//出力(グローバル)
+//fonts[]
+//
 
 void addNewFont(string fileName){
 
@@ -162,24 +171,55 @@ void addNewFont(string fileName){
 	fonts ~= newFont;
 }
 
+//関数 getAdvanceWidth
+//
+//指定されたフォントにおける、指定された文字の送り幅(AdvanceWidth)を取得し、返す。
+//
+//入力(引数)
+//string in0	文字1文字
+//uint fontid	フォントID
+//入力(グローバル)
+//fonts[]
+//出力(戻り値)
+//uint			フォントの送り幅
+//
 
 uint getAdvanceWidth(string in0,uint fontid){
 	auto writer = appender!string();
 	auto chr = array(in0)[0];
 
-	//writeln(fonts[fontid].advanceWidth);
-
 	return fonts[fontid].advanceWidth[fonts[fontid].charCodeToGlyphId[[chr].toUTF16[0]]];
 }
 
-ubyte[] trim(int from,int length,string filePath){
+
+//関数 trim
+//
+//指定されたパスにあるファイルの指定された区間のバイナリを読み取り返す。
+//
+//入力(引数)
+//int offset		くり抜く区間までのバイトオフセット
+//int length		くり抜く区間の長さ
+//string filePath	くり抜くファイルのパス
+//出力(戻り値)
+//ubyte[]			くりぬかれたファイルのバイナリ
+//
+
+ubyte[] trim(int offset,int length,string filePath){
 	auto fin = File(filePath,"rb");
 	ubyte buffer[] = new ubyte[length];
-	fin.seek(from);
+	fin.seek(offset);
 	fin.rawRead(buffer);
 	return buffer;
 }
 
+//イカ、類似してるのでまとめます
+//
+//入力(引数)
+//ubyte[] in0	バイナリ入力
+//出力(戻り値)
+//変換されたバイナリ(詳しいのはそれぞれに書く)
+
+//バイナリを数値(short)へ
 short array2short(ubyte[] in0){
 	auto writer = appender!string();
 	foreach(elem;in0){
@@ -188,6 +228,7 @@ short array2short(ubyte[] in0){
 	return to!ushort(writer.data,16);
 }
 
+//バイナリを数値(uint)へ
 uint array2uint(ubyte[] in0){
 	auto writer = appender!string();
 	foreach(elem;in0){
@@ -196,6 +237,7 @@ uint array2uint(ubyte[] in0){
 	return to!uint(writer.data,16);
 }
 
+//バイナリを数値(ulong)へ
 ulong array2ulong(ubyte[] in0){
 	auto writer = appender!string();
 	foreach(elem;in0){
@@ -204,6 +246,7 @@ ulong array2ulong(ubyte[] in0){
 	return to!ulong(writer.data,16);
 }
 
+//バイナリを文字列へ
 string array2string(ubyte[] in0){
 	string output;
 	foreach(elem;in0){
@@ -212,3 +255,8 @@ string array2string(ubyte[] in0){
 	}
 	return output;
 }
+
+//これらのナイフを使ってバイナリを解剖する。
+//プログラミング全然できないのでバイナリファイルの正しい読み方がわからないから、
+//こんなクソコードになってます。アーメン
+//「こうしたらいいよ！」って言うのがあったらぜひとも教えてください。お待ちしてます。

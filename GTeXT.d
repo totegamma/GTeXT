@@ -5,16 +5,8 @@
 //  Created by thotgamma on 2016/02/04.
 //
 //	#このファイル:
-//		GTeXTの本体ファイル。
-//		今の所構造体をPDFに出力するコードだけが実装されている。
-//
-//	#(今実装されている)コードの流れ:
-//		1.PDFを構成するオブジェクトが入った配列からオブジェクトを一つずつ取り出し、ファイルに書き出す。
-//		2.この際、書き出した文字のバイト数を数えてsizeに足す。
-//		3.すなわちsizeは先頭からその次のオブジェクトまでのバイト数を示す。
-//		4.それぞれのオブジェクトまでのバイト数を、sizeをdistanceFromTop[]に格納することでメモる。(詳しくはoutputpdf()のコメント参照のこと)
-//		5.最後にdistanceFromTop[]を用いて相互参照テーブルを作成する。
-//
+//		GTeXTの本体ファイル。(の予定)
+//		今は、PDFの構造体を組み立てるコードと、それを実際にファイルとして書き出すコードが実装されている。
 //
 
 import std.stdio;
@@ -31,6 +23,10 @@ import parser;
 const string outputFile = "output.pdf";
 uint[] distanceFromTop;
 
+//###関数 main
+//
+//エントリポイント。何書くのが定石なのかわからん。
+//
 void main(){
 
 	addNewFont("Kozuka_Gothic_Pr6N_M");
@@ -41,7 +37,10 @@ void main(){
 
 }
 
-
+//###関数 outputpdf
+//
+//pdfObjects[]に格納されたPdfオブジェクトを読み込んで、実際にPDFファイルにして書き出す関数。
+//
 void outputpdf(){
 
 	//上書き
@@ -81,6 +80,20 @@ void outputpdf(){
 	fout.writeln(to!string(size)); //相互参照テーブルまでのバイト数=全てのオブジェクトのバイト数の和
 	fout.writeln("%%EOF");
 }
+
+//関数 construct
+//
+//様々な情報をまとめてPDFオブジェクトとしてpdfObjects[]に格納する。
+//
+//入力(グローバル)
+//parser.title
+//parser.author
+//parser.paperSize[]
+//fontanalyzer.fonts[]
+//
+//出力(グローバル)
+//pdfObjectClass.pdfObjects[]
+//
 
 void construct(){
 
@@ -302,7 +315,7 @@ void construct(){
 								new pdfObject("recoad",
 									new pdfObject("name","Descent"),
 									new pdfObject("number",to!int(font.descender))
-								)/*,
+								)/*	//本当は必須項目　だが、入手するのが大変....
 								new pdfObject("recoad",
 									new pdfObject("name","CapHeight"),
 									new pdfObject("number",742)
@@ -330,8 +343,20 @@ void construct(){
 						]),
 						new pdfObject("stream",streamBuff)
 					]);
-
 }
+
+
+//関数 argumentAnalyzer
+//
+//stringで表現された引数表現を連想配列に変換する
+//入力形式は"key:value,key:value"
+//また、keyが与えられず、"value"だけ与えられた場合はkeyが_default_と言う値で要素が一つだけ格納される。
+//
+//入力(引数)
+//string in0		解析する前の文字列(e.g. "width:300, height:500")
+//出力(戻り値)
+//string[string]	鍵と値の連想配列(e.g. width->300, height->500)
+//
 
 string[string] argumentAnalyzer(string in0){
 
@@ -375,6 +400,14 @@ string[string] argumentAnalyzer(string in0){
 
 }
 
+//関数 mmTOpt
+//
+//mmで入力された数値をptに単位換算する
+//
+//入力(引数)
+//int in0
+//出力(戻り値)
+//int
 int mmTOpt(int in0){
 	return to!int(in0 * 2.834);
 }

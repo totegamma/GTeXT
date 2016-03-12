@@ -86,6 +86,8 @@ class pdfObject{
 		}
 	}
 
+	//それぞれのTypeに応じて、実際にPDFファイルに落とされる時のフォーマットで書き出される。
+	//再帰的に処理することで木構造を一気に文字列に落とし込む。
 	string outputText(){
 		switch(type){
 			case "recoad":
@@ -149,6 +151,17 @@ class pdfObject{
 	}
 }
 
+//関数 getObjID
+//
+//オブジェクトの種類と識別子を与えると、該当するオブジェクトが配列の何番目にあるか返す。
+//
+//入力(引数)
+//string in0	オブジェクトの種類
+//uint in1		識別子
+//
+//出力(戻り値)
+//uint			オブジェクトID
+//
 uint getObjID(string in0, uint in1){
 	foreach(uint i, obj; pdfObjects){
 		if(obj.objectType == in0 && obj.objectID== in1){
@@ -159,6 +172,16 @@ uint getObjID(string in0, uint in1){
 	return 0;
 }
 
+//関数 getObjIDarr
+//
+//オブジェクトの種類を与えると、該当するオブジェクトIDをすべて返す
+//
+//入力(引数)
+//string in0	オブジェクトの種類
+//
+//出力(戻り値)
+//uint[]		オブジェクトIDの配列
+//
 uint[] getObjIDarr(string in0){
 	uint idList[];
 	foreach(uint i, obj; pdfObjects){

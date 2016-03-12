@@ -57,13 +57,26 @@ struct sentence{
 	}
 }
 
+//行ごとのまとまり
 class outputline{
 	uint maxFontSize;
 	string stream;
 }
-
 outputline[] outputlines;
 
+//関数 parse
+//
+//input.gtを解析する。
+//
+//入力(ファイル)
+//input.gt
+//
+//出力(グローバル)
+//paperSize
+//padding
+//sentences
+//
+//
 
 void parse(){
 
@@ -142,14 +155,6 @@ void parse(){
 			}
 		}
 	}
-
-	/*
-	//デバッグのため出力
-	writeln("title: " ~ title);
-	writeln("author: " ~ author);
-	writeln(paperSize);
-	writeln(padding);
-	*/
 
 	//ファイル読み込みのシーカーを頭に戻す
 	fin.rewind();
@@ -240,12 +245,6 @@ void parse(){
 	buff = "";
 	currentmode = "normal";
 
-	/*
-	foreach(elem;sentences){
-		writeln(elem.type ~ ": " ~ elem.content);
-	}
-	*/
-
 	outputline newline = new outputline;
 	uint currentWidth;
 	string stringbuff;
@@ -258,7 +257,7 @@ void parse(){
 				uint ciduint = to!uint(cid,16);
 				uint advanceWidth = getAdvanceWidth(to!string(str),currentFont);
 				currentWidth += currentFontSize*advanceWidth;
-				//writeln(width);
+
 				if(currentWidth > (paperSize[2] - padding[0] - padding[1] - 10)*fonts[currentFont].unitsPerEm){ //改行するタイミング
 					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";
 					outputlines ~= newline;
@@ -347,7 +346,17 @@ void parse(){
 	}
 }
 
-
+//関数 argumentAnalyzer
+//
+//stringで表現された引数表現を連想配列に変換する
+//入力形式は"key:value,key:value"
+//また、keyが与えられず、"value"だけ与えられた場合はkeyが_default_と言う値で要素が一つだけ格納される。
+//
+//入力(引数)
+//string in0		解析する前の文字列(e.g. "width:300, height:500")
+//出力(戻り値)
+//string[string]	鍵と値の連想配列(e.g. width->300, height->500)
+//
 string[string] argumentAnalyzer(string in0){
 
 	if(indexOf(in0,",") == -1){
@@ -390,6 +399,15 @@ string[string] argumentAnalyzer(string in0){
 
 }
 
+//関数 string2cid
+//
+//文字1文字を受け取り、cmap[]を参照することでその文字に対するCIDを取得する。
+//
+//入力(引数)
+//string in0		文字1文字
+//出力(戻り値)
+//string CID
+//
 string string2cid(string in0){
 	if(in0 == ""){
 		return "";
