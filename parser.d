@@ -294,6 +294,13 @@ void parse(){
 					currentWidth = 0;
 					stringbuff = "";
 					break;
+				case "br":
+					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";
+					outputlines ~= newline;
+					newline = new outputline;
+					currentWidth = 0;
+					stringbuff = "";
+					break;
 				case "pi":
 					stringbuff ~= string2cid("π");
 					stringbuff ~= string2cid(" ");
