@@ -32,21 +32,17 @@ The number #pi is a mathematical constant.
 消えろ、消えろ、つかの間の灯火！人生は歩きまわる影法師、あわれな役者だ、舞台の上でおおげさにみえをきっても、出場が終われば消えてしまう。
 
 #setFontSize(30)
-#setFont(01FLOPDESIGN)
-01フロップデザイン#br
 #setFont(Kozuka_Gothic_Pr6N_EL)
-小塚ゴシックPro #setFontSize(10)この下には50Ptのギャップ#br(50) 
+小塚ゴシックPro #setFontSize(10)この下には50Ptのギャップ#br(50)
 #setFontSize(30)
-#setFont(GD-HighwayGothicJA-OTF)
-GD-高速道路ゴシックJA-OTF#br
-#setFont(YuGothic_Bold)
-游ゴシック#br
-#setFont(APJapanesefont)
-あんずもじ#br
 #setFont(suusiki)
 数式フォント#br
 #setFontSize(20)
 #setFont(APJapanesefont)
 行の途中ですがここでフォントを#setFont(YuGothic_Bold)游ゴシック#setFont(APJapanesefont)に変更させていただきます#br
 #setAlign(right)
-右揃えです
+右揃えです#br
+#setAlign(center)
+どんな長さの文章でも#br
+中央に#br
+揃うといいな

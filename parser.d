@@ -382,12 +382,9 @@ void parse(){
 				streamBuff ~= "1. 0. 0. 1. " ~ to!string(padding[0]) ~ ". " ~ to!string(currentHeight) ~ ". Tm ";
 				break;
 				case "center":
-				streamBuff ~= "1. 0. 0. 1. " ~ to!string(padding[0]) ~ ". " ~ to!string(currentHeight) ~ ". Tm ";
+				streamBuff ~= "1. 0. 0. 1. " ~ to!string(to!int((pageWidth -eachLine.lineWidth)/2)) ~ ". " ~ to!string(currentHeight) ~ ". Tm ";
 				break;
 			case "right":
-				writeln(pageWidth);
-				writeln(eachLine.lineWidth);
-				writeln(padding[1]);
 				streamBuff ~= "1. 0. 0. 1. " ~ to!string(to!int(pageWidth -eachLine.lineWidth -padding[1])) ~ ". " ~ to!string(currentHeight) ~ ". Tm ";
 				break;
 			default:
