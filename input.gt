@@ -47,4 +47,6 @@ GD-高速道路ゴシックJA-OTF#br
 数式フォント#br
 #setFontSize(20)
 #setFont(APJapanesefont)
-行の途中ですがここでフォントを#setFont(YuGothic_Bold)游ゴシック#setFont(APJapanesefont)に変更させていただきます
+行の途中ですがここでフォントを#setFont(YuGothic_Bold)游ゴシック#setFont(APJapanesefont)に変更させていただきます#br
+#setAlign(right)
+右揃えです

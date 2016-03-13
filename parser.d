@@ -43,8 +43,9 @@ int[4] paperSize = [0, 0, 595, 842]; //a4
 int[4] padding = [28, 28, 28, 28]; //10mmのパディング
 int currentFontSize = 20;
 string streamBuff;
+uint pageWidth;
+uint pageHeight;
 
-//uint[] W;
 
 //文章を要素ごとに分割する際、それを格納する構造体
 struct sentence{
@@ -60,8 +61,10 @@ struct sentence{
 //行ごとのまとまり
 class outputline{
 	int nextGap;
+	double lineWidth;
 	uint maxFontSize;
 	string stream;
+	string textAlign;
 }
 outputline[] outputlines;
 
@@ -125,11 +128,14 @@ void parse(){
 									author = argDict["_default_"];
 									break;
 								case "paperSize":
-									//writeln(argDict);
 									if("_default_" in argDict){
 										paperSize = paperSizeDictionary[argDict["_default_"]];
+										pageWidth = to!int(paperSize[2]);
+										pageHeight= to!int(paperSize[3]);
 									}else{
-										paperSize = [0,0,to!int(argDict["width"]),to!int(argDict["height"])];
+										pageWidth = to!int(argDict["width"]);
+										pageHeight=to!int(argDict["height"]);
+										paperSize = [0, 0, pageWidth, pageHeight];
 									}
 									break;
 								case "padding":
@@ -247,9 +253,10 @@ void parse(){
 	currentmode = "normal";
 
 	outputline newline = new outputline;
-	uint currentWidth;
+	double currentWidth;
 	string stringbuff;
 	uint currentFont;
+	string currentAlign = "left";
 
 	foreach(elem; sentences){
 		if(elem.type == "normal"){
@@ -257,21 +264,24 @@ void parse(){
 				string cid = string2cid(to!string(str));
 				uint ciduint = to!uint(cid,16);
 				uint advanceWidth = getAdvanceWidth(to!string(str),currentFont);
-				currentWidth += currentFontSize*advanceWidth;
+				currentWidth += to!double(currentFontSize)*to!double(advanceWidth)/to!double(fonts[currentFont].unitsPerEm);
 
-				if(currentWidth > (paperSize[2] - padding[0] - padding[1] - 10)*fonts[currentFont].unitsPerEm){ //改行するタイミング
-					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";
-					outputlines ~= newline;
-					newline = new outputline;
-					currentWidth = 0;
-					stringbuff = "";
+				if(currentWidth > (paperSize[2] - padding[0] - padding[1] - 10)){ //改行するタイミング
+					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";	// ┓
+					newline.lineWidth = currentWidth;				// ┃
+					outputlines ~= newline;							// ┃
+					newline = new outputline;						// ┃改行処理
+					currentWidth = 0;								// ┃
+					stringbuff = "";								// ┛
 				}
 
+				//streamのイニシャライズ
 				if(newline.stream == ""){
 					newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
 					newline.maxFontSize = currentFontSize;
+					newline.textAlign = currentAlign;
 				}
-				
+
 				stringbuff ~= cid;
 				bool flag = true;;
 				foreach(a;fonts[currentFont].widthCidMapping){
@@ -289,22 +299,24 @@ void parse(){
 		}else if(elem.type == "command"){
 			switch(elem.content){
 				case "newparagraph":
-					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";
-					outputlines ~= newline;
-					newline = new outputline;
-					currentWidth = 0;
-					stringbuff = "";
+					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";	// ┓
+					newline.lineWidth = currentWidth;				// ┃
+					outputlines ~= newline;							// ┃
+					newline = new outputline;						// ┃改行処理
+					currentWidth = 0;								// ┃
+					stringbuff = "";								// ┛
 					break;
 				case "br":
 					if(elem.argument != ""){
 						auto argDict = argumentAnalyzer(elem.argument);
 						newline.nextGap = to!int(argDict["_default_"]);
 					}
-					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";
-					outputlines ~= newline;
-					newline = new outputline;
-					currentWidth = 0;
-					stringbuff = "";
+					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";	// ┓
+					newline.lineWidth = currentWidth;				// ┃
+					outputlines ~= newline;							// ┃
+					newline = new outputline;						// ┃改行処理
+					currentWidth = 0;								// ┃
+					stringbuff = "";								// ┛
 					break;
 				case "pi":
 					stringbuff ~= string2cid("π");
@@ -340,6 +352,17 @@ void parse(){
 						stringbuff = "";
 						newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
 					}
+					break;
+				case "setAlign":
+					auto argDict = argumentAnalyzer(elem.argument);
+					currentAlign = to!string(argDict["_default_"]);
+					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";	// ┓
+					newline.lineWidth = currentWidth;				// ┃
+					outputlines ~= newline;							// ┃
+					newline = new outputline;						// ┃改行処理
+					currentWidth = 0;								// ┃
+					stringbuff = "";								// ┛
+					break;
 				default:
 					break;
 			}
@@ -347,14 +370,30 @@ void parse(){
 	}
 
 	streamBuff ~= "BT\n";
-	uint currentHeight = paperSize[3] - padding[3];
+	uint currentHeight = pageHeight - padding[3];
 	foreach(uint i, eachLine; outputlines){
 		if(i == 0){
 			currentHeight -= eachLine.maxFontSize + fonts[currentFont].lineGap/fonts[currentFont].unitsPerEm;
 		}else{
 			currentHeight -= eachLine.maxFontSize + outputlines[i-1].nextGap + fonts[currentFont].lineGap/fonts[currentFont].unitsPerEm;
 		}
-		streamBuff ~= "1. 0. 0. 1. " ~ to!string(padding[0]) ~ ". " ~ to!string(currentHeight) ~ ". Tm ";
+		switch(eachLine.textAlign){
+			case "left":
+				streamBuff ~= "1. 0. 0. 1. " ~ to!string(padding[0]) ~ ". " ~ to!string(currentHeight) ~ ". Tm ";
+				break;
+				case "center":
+				streamBuff ~= "1. 0. 0. 1. " ~ to!string(padding[0]) ~ ". " ~ to!string(currentHeight) ~ ". Tm ";
+				break;
+			case "right":
+				writeln(pageWidth);
+				writeln(eachLine.lineWidth);
+				writeln(padding[1]);
+				streamBuff ~= "1. 0. 0. 1. " ~ to!string(to!int(pageWidth -eachLine.lineWidth -padding[1])) ~ ". " ~ to!string(currentHeight) ~ ". Tm ";
+				break;
+			default:
+				break;
+		}
+		
 		streamBuff ~= eachLine.stream;
 	}
 	streamBuff ~= "ET\n";
