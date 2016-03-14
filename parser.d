@@ -58,6 +58,11 @@ struct sentence{
 	}
 }
 
+struct style{
+	uint fontsize;
+	string font;
+}
+
 //行ごとのまとまり
 class outputline{
 	int nextGap;
