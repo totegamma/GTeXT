@@ -59,9 +59,12 @@ struct sentence{
 }
 
 struct style{
-	uint fontsize;
-	string font;
+	uint fontSize;
+	uint fontID;
+	string fontName;
 }
+style[] styleStack;	//範囲指定子が使うやつ
+style[] styleList;	//自分で命名したstyleを保存するやつ
 
 //行ごとのまとまり
 class outputline{
@@ -204,6 +207,14 @@ void parse(){
 							buff = "";
 						}
 						currentmode = "math";
+					}else if(str == '{'){
+						sentences ~= sentence("normal",buff);
+						buff = "";
+						sentences ~= sentence("command","beginRange");
+					}else if(str == '}'){
+						sentences ~= sentence("normal",buff);
+						buff = "";
+						sentences ~= sentence("command","endRange");
 					}else{
 						buff ~= str;
 					}
@@ -303,6 +314,22 @@ void parse(){
 
 		}else if(elem.type == "command"){
 			switch(elem.content){
+				case "beginRange":
+					styleStack ~= style(currentFontSize,currentFont);
+					break;
+				case "endRange":
+					currentFontSize = styleStack.back.fontSize;
+					currentFont = styleStack.back.fontID;
+					styleStack.popBack();
+					if(stringbuff != ""){
+						newline.stream ~= "<" ~ stringbuff ~ "> Tj ";
+						stringbuff = "";
+						newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
+						if(currentFontSize > newline.maxFontSize){
+							newline.maxFontSize = currentFontSize;
+						}
+					}
+					break;
 				case "newparagraph":
 					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";	// ┓
 					newline.lineWidth = currentWidth;				// ┃
@@ -335,6 +362,9 @@ void parse(){
 						newline.stream ~= "<" ~ stringbuff ~ "> Tj ";
 						stringbuff = "";
 						newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
+						if(currentFontSize > newline.maxFontSize){
+							newline.maxFontSize = currentFontSize;
+						}
 					}
 					break;
 				case "setFont":

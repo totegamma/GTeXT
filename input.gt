@@ -46,3 +46,5 @@ The number #pi is a mathematical constant.
 どんな長さの文章でも#br
 中央に#br
 揃うといいな
+#setAlign(left)#setFontSize(10)
+途中だけ文字が{#setFontSize(30)大きく}なります
