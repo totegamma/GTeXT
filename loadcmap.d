@@ -33,6 +33,9 @@ void loadcmap(){
 	bool loadChar = false;
 	bool loadRange = false;
 
+	writeln("CMAPの読み込みを開始");
+	writeln("CMAP: resources/cmap/UniJIS2004-UTF8-H.txt");
+
 	auto fin = File("resources/cmap/UniJIS2004-UTF8-H.txt","r");
 	while(!fin.eof){
 		line = fin.readln.chomp;
@@ -68,4 +71,6 @@ void loadcmap(){
 			}
 		}
 	}
+	writeln("CMAPの読み込み完了");
+	writeln("要素数" ~ to!string(cmap.length) ~ "個のCMAPを読み込みました");
 }

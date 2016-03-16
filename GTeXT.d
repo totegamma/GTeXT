@@ -29,6 +29,8 @@ uint[] distanceFromTop;
 //
 void main(){
 
+	writeln("GTeXT 0.0.0");
+
 	addNewFont("Kozuka_Gothic_Pr6N_M");
 
 	parse();		//input.gtの解析
@@ -42,6 +44,8 @@ void main(){
 //pdfObjects[]に格納されたPdfオブジェクトを読み込んで、実際にPDFファイルにして書き出す関数。
 //
 void outputpdf(){
+
+	writeln("PDFを出力しています");
 
 	//上書き
 	auto fout = File(outputFile,"w");
@@ -79,6 +83,8 @@ void outputpdf(){
 	fout.writeln("startxref");
 	fout.writeln(to!string(size)); //相互参照テーブルまでのバイト数=全てのオブジェクトのバイト数の和
 	fout.writeln("%%EOF");
+
+	writeln("お待たせしました！PDFの出力が完了しました");
 }
 
 //関数 construct
@@ -96,6 +102,8 @@ void outputpdf(){
 //
 
 void construct(){
+
+	writeln("PDFの構造体を作っています");
 
 	//0 0 objは空(プログラムの簡易化のために下駄を履かせた)
 	pdfObjects ~= new pdfObject("null");

@@ -61,6 +61,9 @@ struct widthCidStruct{
 
 void addNewFont(string fileName){
 
+	writeln("新しいフォントを読み込みます(" ~ fileName ~ ")");
+
+
 	fontInfo newFont = new fontInfo;
 
 	newFont.subtype = "Type0";		//e.g. Type0
@@ -74,8 +77,11 @@ void addNewFont(string fileName){
 	newFont.italicangle = 0;	//e.g. 0
 	newFont.WD = 1000;
 
+
+	writeln("フォントのパスを取得します");
 	//パスを入手
 	auto fin = File("fontDictionary","r");
+
 	string line;
 	while(!fin.eof){
 		line = fin.readln.chomp;
@@ -88,10 +94,16 @@ void addNewFont(string fileName){
 		}
 	}
 	if(newFont.fontPath == ""){
-		writeln("error!: font not found.(" ~ fileName ~ ")");
+		writeln("error!: 指定されたフォント名のフォントファイルが見つかりません。(" ~ fileName ~ ")");
+		writeln("現時点では.otf及び.ttcフォントにしか対応していないことをご確認ください。");
+		writeln("また、新たにフォントを追加した場合はmakeFontDictionaryを実行して、");
+		writeln("fontDictionaryを更新してください。");
+		writeln("GTeXTが認識しているフォント及びその名称は、fontDictionaryで確認できます。");
+		return;
 	}
-
 	newFont.fontName = fileName;
+
+	writeln("取得したパス: " ~ newFont.fontPath);
 
 	int numOfTable = array2uint(trim(4,2,newFont.fontPath));
 	uint numberOfHMetrics;
@@ -102,6 +114,7 @@ void addNewFont(string fileName){
 		uint dataLength = array2uint(trim(24 +16*i, 4,newFont.fontPath));
 		switch(tag){
 			case "head":
+				writeln("フォントの基本情報を読み込んでいます。");
 				newFont.unitsPerEm = array2short(trim(offset+18,2,newFont.fontPath));
 				newFont.fontBBox[0] = array2short(trim(offset+36,2,newFont.fontPath));
 				newFont.fontBBox[1] = array2short(trim(offset+38,2,newFont.fontPath));
@@ -109,6 +122,7 @@ void addNewFont(string fileName){
 				newFont.fontBBox[3] = array2short(trim(offset+42,2,newFont.fontPath));
 				break;
 			case "cmap":
+				writeln("フォントファイル独自のcmapテーブルを読み込んでいます。");
 				uint numTables =							  array2uint(trim(offset+2,2,newFont.fontPath));
 				for(int j; j<numTables; j++){
 					uint encodingID = array2uint(trim(offset+6 +8*j,2,newFont.fontPath));
@@ -153,6 +167,7 @@ void addNewFont(string fileName){
 						newFont.charCodeToGlyphId.rehash;
 					}
 				}
+				writeln(to!string(newFont.charCodeToGlyphId.length) ~ "個の文字を読み込みました");
 				
 				break;
 			case "hhea":
@@ -162,6 +177,7 @@ void addNewFont(string fileName){
 				numberOfHMetrics = array2uint(trim(offset+34,2,newFont.fontPath));
 				break;
 			case "hmtx":
+				writeln("メトリクステーブルを作っています");
 				for(int j; j< numberOfHMetrics; j++){
 					newFont.advanceWidth ~= array2uint(trim(offset+4*j,2,newFont.fontPath));
 				}
@@ -171,6 +187,7 @@ void addNewFont(string fileName){
 		}
 	}
 	fonts ~= newFont;
+	writeln("フォントの読み込みが完了しました。");
 }
 
 //関数 getAdvanceWidth

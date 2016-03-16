@@ -111,6 +111,9 @@ void parse(){
 
 	paperSizeDictionary = ["a4":[0,0,595,842]];
 
+	writeln("本文の解析を開始します");
+	writeln("プリコマンドを解析しています。");
+
 
 	while(!fin.eof){
 		line = fin.readln.chomp;	//.chompで改行コードを除去
@@ -131,18 +134,23 @@ void parse(){
 							switch(precommand){
 								case "title":
 									title = argDict["_default_"];
+									writeln("タイトル: " ~ title);
 									break;
 								case "author":
 									author = argDict["_default_"];
+									writeln("著者: " ~ author);
 									break;
 								case "paperSize":
 									if("_default_" in argDict){
+										writeln(argDict["_default_"] ~ "の紙の大きさを辞書から取得しています");
 										paperSize = paperSizeDictionary[argDict["_default_"]];
 										pageWidth = to!int(paperSize[2]);
 										pageHeight= to!int(paperSize[3]);
+										writeln("取得成功: " ~ to!string(pageWidth) ~ "x" ~ to!string(pageHeight));
 									}else{
 										pageWidth = to!int(argDict["width"]);
 										pageHeight=to!int(argDict["height"]);
+										writeln("ページサイズを手動で指定します(" ~ to!string(pageWidth) ~ "x" ~ to!string(pageHeight) ~ ")");
 										paperSize = [0, 0, pageWidth, pageHeight];
 									}
 									break;
@@ -151,11 +159,17 @@ void parse(){
 										int pad = to!int(argDict["_default_"]);
 										padding = [pad,pad,pad,pad];
 									}else{
-										padding = [to!int(argDict["left"]),to!int(argDict["right"]),to!int(argDict["down"]),to!int(argDict["up"])];
+										padding = [to!int(argDict["up"]),to!int(argDict["down"]),to!int(argDict["left"]),to!int(argDict["right"])];
 									}
+									writeln("パディングを設定します"
+											~	"(天:" ~ to!string(padding[0])
+											~ "mm 地:" ~ to!string(padding[1])
+											~ "mm 左:" ~ to!string(padding[2])
+											~ "mm 右:" ~ to!string(padding[3])
+											~ "mm)");
 									break;
 								default:
-									writeln("Error! unknown precommand: " ~ precommand);
+									writeln("Error! 存在しないプリコマンド" ~ precommand);
 									break;
 							}
 							precommand = "";
@@ -170,6 +184,8 @@ void parse(){
 			}
 		}
 	}
+
+	writeln("本文を解析しています");
 
 	//ファイル読み込みのシーカーを頭に戻す
 	fin.rewind();
@@ -267,12 +283,14 @@ void parse(){
 	if(buff != "")sentences ~= sentence(currentmode,buff);
 	buff = "";
 	currentmode = "normal";
-
+	
 	outputline newline = new outputline;
 	double currentWidth;
 	string stringbuff;
 	uint currentFont;
 	string currentAlign = "left";
+
+	writeln("数式及びコマンドを処理しています");
 
 	foreach(elem; sentences){
 		if(elem.type == "normal"){
@@ -404,6 +422,8 @@ void parse(){
 		}
 	}
 
+	writeln("行の高さを計算しています");
+
 	streamBuff ~= "BT\n";
 	uint currentHeight = pageHeight - padding[3];
 	foreach(uint i, eachLine; outputlines){
@@ -429,6 +449,8 @@ void parse(){
 		streamBuff ~= eachLine.stream;
 	}
 	streamBuff ~= "ET\n";
+
+	writeln("cidフォントの文字幅辞書を作っています。");
 	
 	foreach(font;fonts){
 		sort!("a.cid < b.cid")(font.widthCidMapping);
