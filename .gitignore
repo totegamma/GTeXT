@@ -20,3 +20,5 @@ makeFontDictionary
 cffWriter
 
 sandbox/formulaAnalyzer
+
+sandbox/mathFontAnalyzer
