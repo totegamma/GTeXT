@@ -8,6 +8,7 @@ streamOutput/
 loadcmap
 fontanalyzer
 resources/fonts/
+fontDictionary
 
 *.o
 

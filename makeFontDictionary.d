@@ -16,19 +16,36 @@ import std.array;
 import std.string;
 import std.file;
 import std.path;
+import std.system;
 
 void main(){
+
 	auto fout = File("fontDictionary","w");
-	foreach (string name; dirEntries("/Library/Fonts", SpanMode.depth)){
-		if(name[$-4..$] == ".otf" || name[$-4..$] == ".ttf"){
-			fout.writeln(getFontName(name) ~ ";" ~ name);
-		}
-	}	
-	foreach (string name; dirEntries(expandTilde("~/Library/Fonts"), SpanMode.depth)){
-		if(name[$-4..$] == ".otf" || name[$-4..$] == ".ttf"){
-			fout.writeln(getFontName(name) ~ ";" ~ name);
-		}
+	switch(to!string(os)){
+		case "linux":
+			foreach (string name; dirEntries("/usr/share/fonts", SpanMode.depth)){
+				if(name[$-4..$] == ".otf" || name[$-4..$] == ".ttf"){
+					//writeln("added: " ~ name);
+					fout.writeln(getFontName(name) ~ ";" ~ name);
+				}
+			}
+			break;
+		case "osx":
+			foreach (string name; dirEntries("/Library/Fonts", SpanMode.depth)){
+				if(name[$-4..$] == ".otf" || name[$-4..$] == ".ttf"){
+					fout.writeln(getFontName(name) ~ ";" ~ name);
+				}
+			}	
+			foreach (string name; dirEntries(expandTilde("~/Library/Fonts"), SpanMode.depth)){
+				if(name[$-4..$] == ".otf" || name[$-4..$] == ".ttf"){
+					fout.writeln(getFontName(name) ~ ";" ~ name);
+				}
+			}
+			break;
+		default:
+			writeln("お使いのOSにはまだ対応してないよ。ごめんね。");
 	}
+	
 }
 
 string getFontName(string filename){
