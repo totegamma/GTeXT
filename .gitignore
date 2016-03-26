@@ -22,3 +22,5 @@ cffWriter
 sandbox/formulaAnalyzer
 
 sandbox/mathFontAnalyzer
+
+sandbox/getOSInfo
