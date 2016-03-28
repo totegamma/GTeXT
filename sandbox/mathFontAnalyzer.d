@@ -15,7 +15,19 @@ void main(){
 		uint dataLength = array2uint(trim(24 +16*i, 4,fontPath));
 		switch(tag){
 			case "MATH":
-				writeln("hi");
+				writeln("#version: " ~			to!string(array2uint(trim(offset, 4, fontPath))));
+				uint mathConstantsOffset = array2uint(trim(offset+4, 2, fontPath));
+				uint mathGlyphInfoOffset = array2uint(trim(offset+6, 2, fontPath));
+				uint mathVariantsOffset = array2uint(trim(offset+8, 2, fontPath));
+				writeln("#MathConstants: " ~			to!string(mathConstantsOffset));
+				writeln("#MathGlyphInfo: " ~			to!string(mathGlyphInfoOffset));
+				writeln("#MathVariants: " ~			to!string(mathVariantsOffset));
+				writeln("#ScriptPercentScaleDown: " ~ to!string(array2short(trim(offset +mathConstantsOffset, 2, fontPath))));
+				writeln("#ScriptScriptPercentScaleDown: " ~ to!string(array2short(trim(offset +mathConstantsOffset +2, 2, fontPath))));
+				writeln("#DelimitedSubFormulaMinHeight: " ~ to!string(array2uint(trim(offset +mathConstantsOffset +4, 2, fontPath))));
+				writeln("#DisplayOperatorMinHeight: " ~ to!string(array2uint(trim(offset +mathConstantsOffset +8, 2, fontPath))));
+				writeln("#MathLeading.value: " ~ to!string(array2uint(trim(offset +mathConstantsOffset +10, 2, fontPath))));
+				writeln("#MathLeading.offset: " ~ to!string(array2uint(trim(offset +mathConstantsOffset +12, 2, fontPath))));
 				break;
 			default:
 				break;
