@@ -329,6 +329,79 @@ void parse(){
 				}
 			}
 			
+		}else if(elem.type == "math"){
+
+			styleStack ~= style(currentFontSize,currentFont);
+
+			string newFontName = "XITS_Math";
+			bool flag = false;
+			foreach(uint i, font; fonts){
+				if(font.fontName == newFontName){
+					currentFont = i;
+					flag = true;
+					break;
+				}
+			}
+			if(flag == false){
+				addNewFont(newFontName);
+				currentFont = to!uint(fonts.length-1);
+			}
+			if(stringbuff != ""){
+				newline.stream ~= "<" ~ stringbuff ~ "> Tj ";
+				stringbuff = "";
+				newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
+			}
+
+			writeln("###DEBUG###");
+			writeln(currentFont);
+
+			foreach(str;array(elem.content)){
+				string cid = string2cid(to!string(str));
+				uint ciduint = to!uint(cid,16);
+				uint advanceWidth = getAdvanceWidth(to!string(str),currentFont);
+				currentWidth += to!double(currentFontSize)*to!double(advanceWidth)/to!double(fonts[currentFont].unitsPerEm);
+
+				if(currentWidth > (paperSize[2] - padding[0] - padding[1] - 10)){ //改行するタイミング
+					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";	// ┓
+					newline.lineWidth = currentWidth;				// ┃
+					outputlines ~= newline;							// ┃
+					newline = new outputline;						// ┃改行処理
+					currentWidth = 0;								// ┃
+					stringbuff = "";								// ┛
+				}
+
+				//streamのイニシャライズ
+				if(newline.stream == ""){
+					newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
+					newline.maxFontSize = currentFontSize;
+					newline.textAlign = currentAlign;
+				}
+
+				stringbuff ~= cid;
+				bool vflag = true;;
+				foreach(a;fonts[currentFont].widthCidMapping){
+					if(a.cid == ciduint){
+						vflag = false;
+						break;
+					}
+				}
+				if(vflag == true){
+					fonts[currentFont].widthCidMapping ~= widthCidStruct(ciduint,advanceWidth);
+				}
+			}
+
+			currentFontSize = styleStack.back.fontSize;
+			currentFont = styleStack.back.fontID;
+			styleStack.popBack();
+			if(stringbuff != ""){
+				newline.stream ~= "<" ~ stringbuff ~ "> Tj ";
+				stringbuff = "";
+				newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
+				if(currentFontSize > newline.maxFontSize){
+					newline.maxFontSize = currentFontSize;
+				}
+			}
+
 
 		}else if(elem.type == "command"){
 			switch(elem.content){

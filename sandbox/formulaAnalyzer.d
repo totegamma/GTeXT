@@ -4,32 +4,6 @@ import std.string;
 import std.conv;
 
 
-
-/*
-class mathObj{
-	string type;
-	real value;
-	string ope;
-	string valuable;
-
-	this(string in0,...){
-		type = in0;
-		switch(type){
-			case "value":
-				value = va_arg!real(_argptr);
-				break;
-			case "ope":
-				ope = va_arg!string(_argptr);
-				break;
-			case "valuable":
-				valuable = va_arg!string(_argptr);
-			default:
-				break;
-		}
-	}
-}
-*/
-
 class mathObj{
 	string type;
 	real value;
@@ -61,7 +35,6 @@ class mathObj{
 
 	void parse(){
 		if(formula.length == 1){
-			//return new mathObj("value",to!real(formula));
 			type = "value";
 			value = to!real(formula);
 			return;
@@ -149,13 +122,9 @@ class mathObj{
 
 }
 
-
 void main(){
 	string input = "6*9*2+3*4";
 	mathObj testObj = new mathObj("formula", input);
 	testObj.parse;
 	writeln(testObj.calculate);
-
-	
-
 }

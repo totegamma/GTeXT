@@ -32,6 +32,7 @@ void main(){
 	writeln("GTeXT 0.0.0");
 
 	addNewFont("Kozuka_Gothic_Pr6N_M");
+	addNewFont("XITS_Math");
 
 	parse();		//input.gtの解析
 	construct();	//PDFの構造体を作る
