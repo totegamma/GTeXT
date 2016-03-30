@@ -71,12 +71,13 @@ class outputline{
 	int nextGap;
 	double lineWidth;
 	uint maxFontSize;
+	uint biggestFontFontID;
 	string stream;
 	string textAlign;
 }
 outputline[] outputlines;
 
-//関数 parse
+//関数 parse とその愉快な仲間たち
 //
 //input.gtを解析する。
 //
@@ -88,32 +89,49 @@ outputline[] outputlines;
 //padding
 //sentences
 //
+//コード・フロー
 //
+//input.gt -> sentences -> outputLines -> streamBuff
+
+//# perseToSentences
+//input.gt -> sentences
+
+//# encodeSentences
+// sentences -> outputLines
+
+//# createStream
+// outputLines -> streamBuff
 
 void parse(){
 
 	//デバッグを素早く行うため入力ファイル名はあらかじめ記入しておいた
 	string inputFile = "input.gt";
 
-	auto fin = File(inputFile,"r");
-
 	//cmapファイルをの読み込み
 	loadcmap.loadcmap();
+	paperSizeDictionary = ["a4":[0,0,595,842]];		//TODO ここなんとかする
+
+	writeln("本文の解析を開始します");
+
+	perseToSentences(inputFile);
+	encodeSentences();
+	createStream();
+	
+}
+
+
+void perseToSentences(string inputFileName){
 
 	//解析に使う変数
 	string line;
 	string currentmode = "normal";
-	string buff;
+	bool beforeArgument = true;	//TODO 変数名の改善
 	string precommand;
 	string argument;
+	string buff;				//TODO 変数名の改善
 
-	bool beforeArgument = true;
-
-	paperSizeDictionary = ["a4":[0,0,595,842]];
-
-	writeln("本文の解析を開始します");
+	auto fin = File(inputFileName,"r");
 	writeln("プリコマンドを解析しています。");
-
 
 	while(!fin.eof){
 		line = fin.readln.chomp;	//.chompで改行コードを除去
@@ -190,7 +208,7 @@ void parse(){
 	//ファイル読み込みのシーカーを頭に戻す
 	fin.rewind();
 
-	while(!fin.eof){
+	while(!fin.eof){ //一行ずつ読む
 		line = fin.readln.chomp;
 		//コマンド行もしくは空行であればスキップ
 		if(line.length == 0){
@@ -201,7 +219,7 @@ void parse(){
 			}
 			sentences ~= sentence("command","newparagraph");
 			continue;
-		}else if(line.length >= 2){
+		}else if(line.length >= 2){ //プリコマンド行は無視する
 			if(line[0 .. 2] == "#!"){
 				continue;
 			}
@@ -274,16 +292,16 @@ void parse(){
 					break;
 			}
 		}
-		if(currentmode == "command"){
+		if(currentmode == "command"){	//Commandの入力は行末でも区切りになる
 			sentences ~= sentence("command",buff);
 			buff = "";
 			currentmode = "normal";
 		}
 	}
 	if(buff != "")sentences ~= sentence(currentmode,buff);
-	buff = "";
-	currentmode = "normal";
-	
+}
+
+void encodeSentences(){
 	outputline newline = new outputline;
 	double currentWidth;
 	string stringbuff;
@@ -351,9 +369,6 @@ void parse(){
 				stringbuff = "";
 				newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
 			}
-
-			writeln("###DEBUG###");
-			writeln(currentFont);
 
 			foreach(str;array(elem.content)){
 				string cid = string2cid(to!string(str));
@@ -494,17 +509,21 @@ void parse(){
 			}
 		}
 	}
+}
 
+
+void createStream(){
 	writeln("行の高さを計算しています");
 
 	streamBuff ~= "BT\n";
 	uint currentHeight = pageHeight - padding[3];
 	foreach(uint i, eachLine; outputlines){
 		if(i == 0){
-			currentHeight -= eachLine.maxFontSize + fonts[currentFont].lineGap/fonts[currentFont].unitsPerEm;
+			currentHeight -= eachLine.maxFontSize + fonts[eachLine.biggestFontFontID].lineGap/fonts[eachLine.biggestFontFontID].unitsPerEm;
 		}else{
-			currentHeight -= eachLine.maxFontSize + outputlines[i-1].nextGap + fonts[currentFont].lineGap/fonts[currentFont].unitsPerEm;
+			currentHeight -= eachLine.maxFontSize + outputlines[i-1].nextGap + fonts[eachLine.biggestFontFontID].lineGap/fonts[eachLine.biggestFontFontID].unitsPerEm;
 		}
+
 		switch(eachLine.textAlign){
 			case "left":
 				streamBuff ~= "1. 0. 0. 1. " ~ to!string(padding[0]) ~ ". " ~ to!string(currentHeight) ~ ". Tm ";
