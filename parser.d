@@ -229,63 +229,80 @@ void perseToSentences(string inputFileName){
 		foreach(str;line){
 			switch(currentmode){
 				case "normal":
-					if(str == '#'){
-						if(buff != ""){
+					switch(str){
+						case '#':
+							if(buff != ""){
+								sentences ~= sentence("normal",buff);
+								buff = "";
+							}
+							currentmode = "command";
+							break;
+						case '[':
+							if(buff != ""){
+								sentences ~= sentence("normal",buff);
+								buff = "";
+							}
+							currentmode = "math";
+							break;
+						case '{':
 							sentences ~= sentence("normal",buff);
 							buff = "";
-						}
-						currentmode = "command";
-					}else if(str == '['){
-						if(buff != ""){
+							sentences ~= sentence("command","beginRange");
+							break;
+						case '}':
 							sentences ~= sentence("normal",buff);
 							buff = "";
-						}
-						currentmode = "math";
-					}else if(str == '{'){
-						sentences ~= sentence("normal",buff);
-						buff = "";
-						sentences ~= sentence("command","beginRange");
-					}else if(str == '}'){
-						sentences ~= sentence("normal",buff);
-						buff = "";
-						sentences ~= sentence("command","endRange");
-					}else{
-						buff ~= str;
+							sentences ~= sentence("command","endRange");
+							break;
+						default:
+							buff ~= str;
+							break;
 					}
 					break;
 				case "command":
-					if(str == '['){
-						sentences ~= sentence("command",buff);
-						buff = "";
-						currentmode = "math";
-					}else if(str == ' '){
-						sentences ~= sentence("command",buff);
-						buff = "";
-						currentmode = "normal";
-					}else if(str == '('){
-						sentences ~= sentence("command",buff);
-						buff = "";
-						currentmode = "argument";
-					}else{
-						buff ~= str;
+					switch(str){
+						case '[':
+							sentences ~= sentence("command",buff);
+							buff = "";
+							currentmode = "math";
+							break;
+						case ' ':
+							sentences ~= sentence("command",buff);
+							buff = "";
+							currentmode = "normal";
+							break;
+						case '(':
+							sentences ~= sentence("command",buff);
+							buff = "";
+							currentmode = "argument";
+							break;
+						default:
+							buff ~= str;
+							break;
 					}
 					break;
 				case "math":
-					if(str == ']'){
-						sentences ~= sentence("math",buff);
-						buff = "";
-						currentmode = "normal";
-					}else{
-						buff ~= str;
+					switch(str){
+						case ']':
+							sentences ~= sentence("math",buff);
+							buff = "";
+							currentmode = "normal";
+							break;
+						default:
+							buff ~= str;
+							break;
 					}
 					break;
 				case "argument":
-					if(str == ')'){
-						sentences[$-1].argument = buff;
-						buff = "";
-						currentmode = "normal";
-					}else{
-						buff ~= str;
+					switch(str){
+						case ')':
+							sentences[$-1].argument = buff;
+							buff = "";
+							currentmode = "normal";
+							break;
+						default:
+							buff ~= str;
+							break;
 					}
 					break;
 				default:
@@ -310,203 +327,191 @@ void encodeSentences(){
 
 	writeln("数式及びコマンドを処理しています");
 
+	void lineFeed(){
+		newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";	// ┓
+		newline.lineWidth = currentWidth;				// ┃
+		outputlines ~= newline;							// ┃
+		newline = new outputline;						// ┃改行処理
+		currentWidth = 0;								// ┃
+		stringbuff = "";								// ┛
+	}
+
 	foreach(elem; sentences){
-		if(elem.type == "normal"){
-			foreach(str;array(elem.content)){
-				string cid = string2cid(to!string(str));
-				uint ciduint = to!uint(cid,16);
-				uint advanceWidth = getAdvanceWidth(to!string(str),currentFont);
-				currentWidth += to!double(currentFontSize)*to!double(advanceWidth)/to!double(fonts[currentFont].unitsPerEm);
+		switch(elem.type){
+			case "normal":
+				foreach(str;array(elem.content)){
+					string cid = string2cid(to!string(str));
+					uint ciduint = to!uint(cid,16);
+					uint advanceWidth = getAdvanceWidth(to!string(str),currentFont);
+					currentWidth += to!double(currentFontSize)*to!double(advanceWidth)/to!double(fonts[currentFont].unitsPerEm);
 
-				if(currentWidth > (paperSize[2] - padding[0] - padding[1] - 10)){ //改行するタイミング
-					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";	// ┓
-					newline.lineWidth = currentWidth;				// ┃
-					outputlines ~= newline;							// ┃
-					newline = new outputline;						// ┃改行処理
-					currentWidth = 0;								// ┃
-					stringbuff = "";								// ┛
-				}
-
-				//streamのイニシャライズ
-				if(newline.stream == ""){
-					newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
-					newline.maxFontSize = currentFontSize;
-					newline.textAlign = currentAlign;
-				}
-
-				stringbuff ~= cid;
-				bool flag = true;;
-				foreach(a;fonts[currentFont].widthCidMapping){
-					if(a.cid == ciduint){
-						flag = false;
-						break;
+					if(currentWidth > (paperSize[2] - padding[0] - padding[1] - 10)){ //次文字を挿入すると枠外に出るなら改行
+						lineFeed();
 					}
-				}
-				if(flag == true){
-					fonts[currentFont].widthCidMapping ~= widthCidStruct(ciduint,advanceWidth);
-				}
-			}
-			
-		}else if(elem.type == "math"){
 
-			styleStack ~= style(currentFontSize,currentFont);
-
-			string newFontName = "XITS_Math";
-			bool flag = false;
-			foreach(uint i, font; fonts){
-				if(font.fontName == newFontName){
-					currentFont = i;
-					flag = true;
-					break;
-				}
-			}
-			if(flag == false){
-				addNewFont(newFontName);
-				currentFont = to!uint(fonts.length-1);
-			}
-			if(stringbuff != ""){
-				newline.stream ~= "<" ~ stringbuff ~ "> Tj ";
-				stringbuff = "";
-				newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
-			}
-
-			foreach(str;array(elem.content)){
-				string cid = string2cid(to!string(str));
-				uint ciduint = to!uint(cid,16);
-				uint advanceWidth = getAdvanceWidth(to!string(str),currentFont);
-				currentWidth += to!double(currentFontSize)*to!double(advanceWidth)/to!double(fonts[currentFont].unitsPerEm);
-
-				if(currentWidth > (paperSize[2] - padding[0] - padding[1] - 10)){ //改行するタイミング
-					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";	// ┓
-					newline.lineWidth = currentWidth;				// ┃
-					outputlines ~= newline;							// ┃
-					newline = new outputline;						// ┃改行処理
-					currentWidth = 0;								// ┃
-					stringbuff = "";								// ┛
-				}
-
-				//streamのイニシャライズ
-				if(newline.stream == ""){
-					newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
-					newline.maxFontSize = currentFontSize;
-					newline.textAlign = currentAlign;
-				}
-
-				stringbuff ~= cid;
-				bool vflag = true;;
-				foreach(a;fonts[currentFont].widthCidMapping){
-					if(a.cid == ciduint){
-						vflag = false;
-						break;
-					}
-				}
-				if(vflag == true){
-					fonts[currentFont].widthCidMapping ~= widthCidStruct(ciduint,advanceWidth);
-				}
-			}
-
-			currentFontSize = styleStack.back.fontSize;
-			currentFont = styleStack.back.fontID;
-			styleStack.popBack();
-			if(stringbuff != ""){
-				newline.stream ~= "<" ~ stringbuff ~ "> Tj ";
-				stringbuff = "";
-				newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
-				if(currentFontSize > newline.maxFontSize){
-					newline.maxFontSize = currentFontSize;
-				}
-			}
-
-
-		}else if(elem.type == "command"){
-			switch(elem.content){
-				case "beginRange":
-					styleStack ~= style(currentFontSize,currentFont);
-					break;
-				case "endRange":
-					currentFontSize = styleStack.back.fontSize;
-					currentFont = styleStack.back.fontID;
-					styleStack.popBack();
-					if(stringbuff != ""){
-						newline.stream ~= "<" ~ stringbuff ~ "> Tj ";
-						stringbuff = "";
+					//streamのイニシャライズ
+					if(newline.stream == ""){
 						newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
-						if(currentFontSize > newline.maxFontSize){
-							newline.maxFontSize = currentFontSize;
-						}
+						newline.maxFontSize = currentFontSize;
+						newline.textAlign = currentAlign;
 					}
-					break;
-				case "newparagraph":
-					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";	// ┓
-					newline.lineWidth = currentWidth;				// ┃
-					outputlines ~= newline;							// ┃
-					newline = new outputline;						// ┃改行処理
-					currentWidth = 0;								// ┃
-					stringbuff = "";								// ┛
-					break;
-				case "br":
-					if(elem.argument != ""){
-						auto argDict = argumentAnalyzer(elem.argument);
-						newline.nextGap = to!int(argDict["_default_"]);
-					}
-					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";	// ┓
-					newline.lineWidth = currentWidth;				// ┃
-					outputlines ~= newline;							// ┃
-					newline = new outputline;						// ┃改行処理
-					currentWidth = 0;								// ┃
-					stringbuff = "";								// ┛
-					break;
-				case "pi":
-					stringbuff ~= string2cid("π");
-					stringbuff ~= string2cid(" ");
-					currentWidth += currentFontSize*getAdvanceWidth("π",currentFont);
-					break;
-				case "setFontSize":
-					auto argDict = argumentAnalyzer(elem.argument);
-					currentFontSize = to!int(argDict["_default_"]);
-					if(stringbuff != ""){
-						newline.stream ~= "<" ~ stringbuff ~ "> Tj ";
-						stringbuff = "";
-						newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
-						if(currentFontSize > newline.maxFontSize){
-							newline.maxFontSize = currentFontSize;
-						}
-					}
-					break;
-				case "setFont":
-					auto argDict = argumentAnalyzer(elem.argument);
-					string newFontName = to!string(argDict["_default_"]);
-					bool flag = false;
-					foreach(uint i, font; fonts){
-						if(font.fontName == newFontName){
-							currentFont = i;
-							flag = true;
+
+					stringbuff ~= cid;
+					bool flag = true;;
+					foreach(a;fonts[currentFont].widthCidMapping){
+						if(a.cid == ciduint){
+							flag = false;
 							break;
 						}
 					}
-					if(flag == false){
-						addNewFont(newFontName);
-						currentFont = to!uint(fonts.length-1);
+					if(flag == true){
+						fonts[currentFont].widthCidMapping ~= widthCidStruct(ciduint,advanceWidth);
 					}
-					if(stringbuff != ""){
-						newline.stream ~= "<" ~ stringbuff ~ "> Tj ";
-						stringbuff = "";
+				}
+				break;
+			case "math":
+
+				styleStack ~= style(currentFontSize,currentFont);
+
+				string newFontName = "XITS_Math";
+				bool flag = false;
+				foreach(uint i, font; fonts){
+					if(font.fontName == newFontName){
+						currentFont = i;
+						flag = true;
+						break;
+					}
+				}
+				if(flag == false){
+					addNewFont(newFontName);
+					currentFont = to!uint(fonts.length-1);
+				}
+				if(stringbuff != ""){
+					newline.stream ~= "<" ~ stringbuff ~ "> Tj ";
+					stringbuff = "";
+					newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
+				}
+
+				foreach(str;array(elem.content)){
+					string cid = string2cid(to!string(str));
+					uint ciduint = to!uint(cid,16);
+					uint advanceWidth = getAdvanceWidth(to!string(str),currentFont);
+					currentWidth += to!double(currentFontSize)*to!double(advanceWidth)/to!double(fonts[currentFont].unitsPerEm);
+
+					if(currentWidth > (paperSize[2] - padding[0] - padding[1] - 10)){ //改行するタイミング
+						lineFeed();
+					}
+
+					//streamのイニシャライズ
+					if(newline.stream == ""){
 						newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
+						newline.maxFontSize = currentFontSize;
+						newline.textAlign = currentAlign;
 					}
-					break;
-				case "setAlign":
-					auto argDict = argumentAnalyzer(elem.argument);
-					currentAlign = to!string(argDict["_default_"]);
-					newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";	// ┓
-					newline.lineWidth = currentWidth;				// ┃
-					outputlines ~= newline;							// ┃
-					newline = new outputline;						// ┃改行処理
-					currentWidth = 0;								// ┃
-					stringbuff = "";								// ┛
-					break;
+
+					stringbuff ~= cid;
+					bool vflag = true;;
+					foreach(a;fonts[currentFont].widthCidMapping){
+						if(a.cid == ciduint){
+							vflag = false;
+							break;
+						}
+					}
+					if(vflag == true){
+						fonts[currentFont].widthCidMapping ~= widthCidStruct(ciduint,advanceWidth);
+					}
+				}
+
+				currentFontSize = styleStack.back.fontSize;
+				currentFont = styleStack.back.fontID;
+				styleStack.popBack();
+				if(stringbuff != ""){
+					newline.stream ~= "<" ~ stringbuff ~ "> Tj ";
+					stringbuff = "";
+					newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
+					if(currentFontSize > newline.maxFontSize){
+						newline.maxFontSize = currentFontSize;
+					}
+				}
+				break;
+
+			case "command":
+				switch(elem.content){
+					case "beginRange":
+						styleStack ~= style(currentFontSize,currentFont);
+						break;
+					case "endRange":
+						currentFontSize = styleStack.back.fontSize;
+						currentFont = styleStack.back.fontID;
+						styleStack.popBack();
+						if(stringbuff != ""){
+							newline.stream ~= "<" ~ stringbuff ~ "> Tj ";
+							stringbuff = "";
+							newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
+							if(currentFontSize > newline.maxFontSize){
+								newline.maxFontSize = currentFontSize;
+							}
+						}
+						break;
+					case "newparagraph":
+							lineFeed();
+						break;
+					case "br":
+						if(elem.argument != ""){
+							auto argDict = argumentAnalyzer(elem.argument);
+							newline.nextGap = to!int(argDict["_default_"]);
+						}
+						lineFeed();
+						break;
+					case "pi":
+						stringbuff ~= string2cid("π");
+						stringbuff ~= string2cid(" ");
+						currentWidth += currentFontSize*getAdvanceWidth("π",currentFont);
+						break;
+					case "setFontSize":
+						auto argDict = argumentAnalyzer(elem.argument);
+						currentFontSize = to!int(argDict["_default_"]);
+						if(stringbuff != ""){
+							newline.stream ~= "<" ~ stringbuff ~ "> Tj ";
+							stringbuff = "";
+							newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
+							if(currentFontSize > newline.maxFontSize){
+								newline.maxFontSize = currentFontSize;
+							}
+						}
+						break;
+					case "setFont":
+						auto argDict = argumentAnalyzer(elem.argument);
+						string newFontName = to!string(argDict["_default_"]);
+						bool flag = false;
+						foreach(uint i, font; fonts){
+							if(font.fontName == newFontName){
+								currentFont = i;
+								flag = true;
+								break;
+							}
+						}
+						if(flag == false){
+							addNewFont(newFontName);
+							currentFont = to!uint(fonts.length-1);
+						}
+						if(stringbuff != ""){
+							newline.stream ~= "<" ~ stringbuff ~ "> Tj ";
+							stringbuff = "";
+							newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
+						}
+						break;
+					case "setAlign":
+						auto argDict = argumentAnalyzer(elem.argument);
+						currentAlign = to!string(argDict["_default_"]);
+						lineFeed();
+						break;
+					default:
+						break;
+				}
+				break;
 				default:
-					break;
-			}
+				break;
 		}
 	}
 }
