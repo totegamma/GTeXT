@@ -122,8 +122,9 @@ class mathObj{
 
 }
 
-void main(){
-	string input = "6*9*2+3*4";
+void main(string args[]){
+//	string input = "6*9*2+3*4";
+	string input = args[1];
 	mathObj testObj = new mathObj("formula", input);
 	testObj.parse;
 	writeln(testObj.calculate);
