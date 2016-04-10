@@ -35,6 +35,7 @@ class fontInfo{
 	int[] W;
 	int WD;
 
+	string fontType;
 	uint[uint] charCodeToGlyphId;
 	short unitsPerEm;
 	short lineGap;
@@ -59,7 +60,7 @@ struct widthCidStruct{
 //fonts[]
 //
 
-void addNewFont(string fileName){
+void addNewFont(string fileName, string fontType){
 
 	writeln("新しいフォントを読み込みます(" ~ fileName ~ ")");
 
@@ -76,6 +77,7 @@ void addNewFont(string fileName){
 	newFont.flags = 4; 		//e.g. 4
 	newFont.italicangle = 0;	//e.g. 0
 	newFont.WD = 1000;
+	newFont.fontType = fontType;
 
 
 	writeln("フォントのパスを取得します");
@@ -125,11 +127,15 @@ void addNewFont(string fileName){
 				writeln("フォントファイル独自のcmapテーブルを読み込んでいます。");
 				uint numTables =							  array2uint(trim(offset+2,2,newFont.fontPath));
 				for(int j; j<numTables; j++){
-					uint encodingID = array2uint(trim(offset+6 +8*j,2,newFont.fontPath));
-					uint tableOffset =						  array2uint(trim(offset+8 +8*j,4,newFont.fontPath));
-					uint format = array2uint(trim(offset + tableOffset,2,newFont.fontPath));
-					if (format == 2){
-					}else if(format == 4 && encodingID == 1){
+					uint platformID =	array2uint(trim(offset+4 +8*j,2,newFont.fontPath));
+					//writeln("platformID: " ~ to!string(platformID));
+					uint encodingID =	array2uint(trim(offset+6 +8*j,2,newFont.fontPath));
+					uint tableOffset =	array2uint(trim(offset+8 +8*j,4,newFont.fontPath));
+					uint format =		array2uint(trim(offset + tableOffset,2,newFont.fontPath));
+					uint languageID = array2uint(trim(offset + tableOffset+4,2,newFont.fontPath));
+					//writeln("languageID: " ~ to!string(languageID));
+					if(format == 4 && encodingID == 1){
+						
 						uint segCount = array2uint(trim(offset + tableOffset+6,2,newFont.fontPath))/2;
 						uint endCount[];
 						for(int k; k<segCount; k++){

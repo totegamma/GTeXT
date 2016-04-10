@@ -383,7 +383,7 @@ void encodeSentences(){
 					}
 				}
 				if(flag == false){
-					addNewFont(newFontName);
+					addNewFont(newFontName,"MATH");
 					currentFont = to!uint(fonts.length-1);
 				}
 				if(stringbuff != ""){
@@ -492,7 +492,28 @@ void encodeSentences(){
 							}
 						}
 						if(flag == false){
-							addNewFont(newFontName);
+							addNewFont(newFontName, "ASCII");
+							currentFont = to!uint(fonts.length-1);
+						}
+						if(stringbuff != ""){
+							newline.stream ~= "<" ~ stringbuff ~ "> Tj ";
+							stringbuff = "";
+							newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
+						}
+						break;
+					case "setCidFont":
+						auto argDict = argumentAnalyzer(elem.argument);
+						string newFontName = to!string(argDict["_default_"]);
+						bool flag = false;
+						foreach(uint i, font; fonts){
+							if(font.fontName == newFontName){
+								currentFont = i;
+								flag = true;
+								break;
+							}
+						}
+						if(flag == false){
+							addNewFont(newFontName, "CID");
 							currentFont = to!uint(fonts.length-1);
 						}
 						if(stringbuff != ""){

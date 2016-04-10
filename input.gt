@@ -32,7 +32,7 @@ The number #pi is a mathematical constant.
 消えろ、消えろ、つかの間の灯火！人生は歩きまわる影法師、あわれな役者だ、舞台の上でおおげさにみえをきっても、出場が終われば消えてしまう。
 
 #setFontSize(30)
-#setFont(APJapanesefont)
+#setCidFont(APJapanesefont)
 #setAlign(right)
 右揃えです#br
 #setAlign(center)
@@ -40,4 +40,7 @@ The number #pi is a mathematical constant.
 中央に#br
 揃うといいな
 #setAlign(left)#setFontSize(10)
-途中だけ文字が{#setFontSize(30)大きく}なります
+途中だけ文字が{#setFontSize(30)大きく}なります#br
+#setFontSize(30)
+#setFont(BraciolaMS)
+ABCDEFG

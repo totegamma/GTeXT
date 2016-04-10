@@ -63,8 +63,8 @@ string getFontName(string filename){
 			for(int j; j < count; j++){
 				uint length = array2uint(trim(offset + 14 +12*j, 2, filename));
 				uint stringOffsetOffset = array2uint(trim(offset + 16 +12*j, 2, filename));
-				if(array2uint(trim(offset + 12 +12*j, 2, filename)) == 4){
-					fontName = translate(array2string(trim(offset +stringOffset +stringOffsetOffset ,length, filename)),[' ' : '_']);
+				if(array2uint(trim(offset + 12 +12*j, 2, filename)) == 6){
+					fontName = array2string(trim(offset +stringOffset +stringOffsetOffset ,length, filename));
 					break;
 				}
 			}
