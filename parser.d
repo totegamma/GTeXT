@@ -61,8 +61,10 @@ struct sentence{
 struct style{
 	uint fontSize;
 	uint fontID;
+	string fontAlign;
 	string fontName;
 }
+
 style[] styleStack;	//範囲指定子が使うやつ
 style[] styleList;	//自分で命名したstyleを保存するやつ
 
@@ -95,12 +97,20 @@ outputline[] outputlines;
 
 //# perseToSentences
 //input.gt -> sentences
+//
+//sentences: コマンドごとの塊	<- コマンドを実行するために必要
+
+//スタイルごとの塊が必要...? styleCluster
+//なんなら行の高さ合わせも同時にやりたい感ある
 
 //# encodeSentences
 // sentences -> outputLines
+//
+//outputLines: 行ごとの塊		<- 行の高さを合わせるのに必要
 
 //# createStream
 // outputLines -> streamBuff
+//streamBuff: 完成されたstream	<- これが欲しい
 
 void parse(){
 
@@ -328,12 +338,14 @@ void encodeSentences(){
 	writeln("数式及びコマンドを処理しています");
 
 	void lineFeed(){
-		newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";	// ┓
-		newline.lineWidth = currentWidth;				// ┃
-		outputlines ~= newline;							// ┃
-		newline = new outputline;						// ┃改行処理
-		currentWidth = 0;								// ┃
-		stringbuff = "";								// ┛
+		if(newline.stream != ""){
+			newline.stream ~= "<" ~ stringbuff ~ "> Tj\n";	// ┓
+			newline.lineWidth = currentWidth;				// ┃
+			outputlines ~= newline;							// ┃
+			newline = new outputline;						// ┃改行処理
+			currentWidth = 0;								// ┃
+			stringbuff = "";								// ┛
+		}
 	}
 
 	foreach(elem; sentences){
@@ -371,7 +383,7 @@ void encodeSentences(){
 				break;
 			case "math":
 
-				styleStack ~= style(currentFontSize,currentFont);
+				styleStack ~= style(currentFontSize,currentFont,currentAlign);
 
 				string newFontName = "XITS_Math";
 				bool flag = false;
@@ -438,11 +450,12 @@ void encodeSentences(){
 			case "command":
 				switch(elem.content){
 					case "beginRange":
-						styleStack ~= style(currentFontSize,currentFont);
+						styleStack ~= style(currentFontSize,currentFont,currentAlign);
 						break;
 					case "endRange":
 						currentFontSize = styleStack.back.fontSize;
 						currentFont = styleStack.back.fontID;
+						currentAlign = styleStack.back.fontAlign;
 						styleStack.popBack();
 						if(stringbuff != ""){
 							newline.stream ~= "<" ~ stringbuff ~ "> Tj ";
@@ -454,14 +467,16 @@ void encodeSentences(){
 						}
 						break;
 					case "newparagraph":
-							lineFeed();
+							//lineFeed();
 						break;
 					case "br":
 						if(elem.argument != ""){
 							auto argDict = argumentAnalyzer(elem.argument);
 							newline.nextGap = to!int(argDict["_default_"]);
 						}
-						lineFeed();
+						//if(stringbuff != ""){
+							lineFeed();
+						//}
 						break;
 					case "pi":
 						stringbuff ~= string2cid("π");
@@ -523,9 +538,14 @@ void encodeSentences(){
 						}
 						break;
 					case "setAlign":
+						//if(stringbuff != "")lineFeed();
 						auto argDict = argumentAnalyzer(elem.argument);
 						currentAlign = to!string(argDict["_default_"]);
-						lineFeed();
+						if(stringbuff != ""){
+							newline.stream ~= "<" ~ stringbuff ~ "> Tj ";
+							stringbuff = "";
+							newline.stream ~= "/F" ~ to!string(currentFont) ~ " " ~ to!string(currentFontSize) ~ " Tf ";
+						}
 						break;
 					default:
 						break;

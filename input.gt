@@ -2,45 +2,9 @@
 #!author(piyopiyo)
 #!paperSize(a4)
 #!padding(20)
-#setFontSize(40)
-Hello,world!
-#setFontSize(20)
-
-Tomorrow, and tomorrow, and tomorrow
-Creeps in this petty pace from day to day,
-To the last syllable of recorded time;
-And all our yesterdays have lighted fools
-The way to dusty death. Out, out, brief candle!
-Life's but a walking shadow, a poor player
-That struts and frets his hour upon the stage
-And then is heard no more. It is a tale
-Told by an idiot, full of sound and fury
-Signifying nothing.
-
-#setFontSize(40)
-Command#br
-#setFontSize(20)
-
-The number #pi is a mathematical constant.
-#pi is commonly defined as the ratio of a circle's circumference [C] to its diameter [d]
-[#pi = C/D]
-
-#setFontSize(40)
-日本語表示テスト
-#setFontSize(20)
-
-消えろ、消えろ、つかの間の灯火！人生は歩きまわる影法師、あわれな役者だ、舞台の上でおおげさにみえをきっても、出場が終われば消えてしまう。
-
-#setFontSize(30)
-#setCidFont(APJapanesefont)
-#setAlign(right)
-右揃えです#br
-#setAlign(center)
-どんな長さの文章でも#br
-中央に#br
-揃うといいな
-#setAlign(left)#setFontSize(10)
-途中だけ文字が{#setFontSize(30)大きく}なります#br
-#setFontSize(30)
-#setFont(BraciolaMS)
-ABCDEFG
+#setFontSize(60)
+#setCidFont(01FLOPDESIGN)
+柳暗花明又一村#br
+{#setFontSize(20)#setAlign(right)美術館「宇宙」より}#br
+#setFontSize(30) vol.1 実数は整数よりも多い!?#br
+#setFontSize(10)途中でフォントサイズを{#setFontSize(30)変えて}みる。#br
