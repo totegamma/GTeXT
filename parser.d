@@ -345,6 +345,7 @@ void makeStyleBlock(){
 	double currentY = pageHeight - padding[3];
 	style currentStyle = style(15,0,"left");
 	styleBlock[] styleBlockByLine;
+	uint extraNextGap;
 	
 	double leftSpace = paperSize[2] - padding[0] - padding[1];
 
@@ -372,7 +373,8 @@ void makeStyleBlock(){
 		}
 
 		//シーカーをフォントサイズ分だけ下げる
-		currentY -= maxFontSize + fonts[maxFontID].lineGap/fonts[maxFontID].unitsPerEm + 5;
+		currentY -= maxFontSize + fonts[maxFontID].lineGap/fonts[maxFontID].unitsPerEm + extraNextGap;
+		extraNextGap = 0;
 
 		styleBlock[] leftAlignBlock;
 		styleBlock[] centerAlignBlock;
@@ -481,6 +483,10 @@ void makeStyleBlock(){
 
 					case "br":
 						lineFeed();
+						if(elem.argument != ""){
+							auto argDict = argumentAnalyzer(elem.argument);
+							extraNextGap = to!int(argDict["_default_"]);
+						}
 						break;
 
 					case "pi":
@@ -526,7 +532,7 @@ void makeStyleBlock(){
 							//改行
 							lineFeed();
 						}
-							currentStyle.fontAlign = newAlign;
+						currentStyle.fontAlign = newAlign;
 						break;
 
 					default:

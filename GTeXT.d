@@ -31,8 +31,8 @@ void main(){
 
 	writeln("GTeXT 0.0.0");
 
-	addNewFont("KozGoPr6N-Medium","CID");
-	addNewFont("XITSMath","MATH");
+//	addNewFont("KozGoPr6N-Medium","CID");
+//	addNewFont("XITSMath","MATH");
 
 	parse();		//input.gtの解析
 	construct();	//PDFの構造体を作る
