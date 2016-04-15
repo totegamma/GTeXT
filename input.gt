@@ -3,7 +3,7 @@
 #!paperSize(a4)
 #!padding(20)
 #setFontSize(60)
-#setCidFont(01FLOPDESIGN)
+#setFont(01FLOPDESIGN)
 柳暗花明又一村#br
 {#setFontSize(20)#setAlign(right)美術館「宇宙」より}#br
 #setFontSize(30) vol.1 実数は整数よりも多い!?#br

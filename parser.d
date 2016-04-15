@@ -80,11 +80,11 @@ outputline[] outputlines;
 
 
 class styleBlock{
-	double x;
-	double y;
+	double x = 0;
+	double y = 0;
 	string content;
 	style blockStyle;
-	double blockWidth;
+	double blockWidth = 0;
 }
 styleBlock[] styleBlockList;
 
@@ -135,6 +135,7 @@ void parse(){
 
 	perseToSentences(inputFile);
 	//encodeSentences();
+	makeStyleBlock();
 	createStream();
 	
 }
@@ -341,13 +342,14 @@ void perseToSentences(string inputFileName){
 void makeStyleBlock(){
 
 	styleBlock newStyleBlock = new styleBlock;
-	double currentY;
+	double currentY = pageHeight - padding[3];
 	style currentStyle = style(15,0,"left");
 	styleBlock[] styleBlockByLine;
 	
 	double leftSpace = paperSize[2] - padding[0] - padding[1];
 
 	void renewStyleBlock(){
+		if(newStyleBlock.content == "")return;
 		newStyleBlock.blockStyle = currentStyle;
 		//現存のstyleBlockをLineに流し込み新しくする
 		styleBlockByLine ~= newStyleBlock;
@@ -355,21 +357,69 @@ void makeStyleBlock(){
 	}
 
 	void lineFeed(){
+
+		renewStyleBlock();
+
+		uint maxFontID;
 		int maxFontSize;
-		uint currentX;
 
 		//その行のフォントサイズの最大値を求める
 		foreach(elem; styleBlockByLine){
 			if(elem.blockStyle.fontSize > maxFontSize){
+				maxFontID = elem.blockStyle.fontID;
 				maxFontSize = elem.blockStyle.fontSize;
 			}
 		}
 
 		//シーカーをフォントサイズ分だけ下げる
-		currentY -= maxFontSize;
+		currentY -= maxFontSize + fonts[maxFontID].lineGap/fonts[maxFontID].unitsPerEm + 5;
+
+		styleBlock[] leftAlignBlock;
+		styleBlock[] centerAlignBlock;
+		double centerAlignBlockWidth = 0;
+		styleBlock[] rightAlignBlock;
+		double rightAlignBlockWidth = 0;
+
+		//寄せる位置ごとに分ける
+		foreach(elem; styleBlockByLine){
+			switch(elem.blockStyle.fontAlign){
+				case "left":
+					leftAlignBlock ~= elem;
+					break;
+				case "center":
+					centerAlignBlock ~= elem;
+					centerAlignBlockWidth += elem.blockWidth;
+					break;
+				case "right":
+					rightAlignBlock ~= elem;
+					rightAlignBlockWidth += elem.blockWidth;
+					break;
+				default:
+					writeln("このメッセージは出ないはずだよ");
+					break;
+			}
+		}
 
 		//求めた位置をstyleBlockに登録する
-		foreach(elem; styleBlockByLine){
+		//左寄せ
+		double currentX = padding[2];
+		foreach(elem; leftAlignBlock){
+			elem.x = currentX;
+			elem.y = currentY;
+			currentX += elem.blockWidth;
+		}
+
+		//中央寄せ
+		currentX = (pageWidth - centerAlignBlockWidth)/2;
+		foreach(elem; centerAlignBlock){
+			elem.x = currentX;
+			elem.y = currentY;
+			currentX += elem.blockWidth;
+		}
+
+		//右寄せ
+		currentX = pageWidth - centerAlignBlockWidth - padding[3];
+		foreach(elem; rightAlignBlock){
 			elem.x = currentX;
 			elem.y = currentY;
 			currentX += elem.blockWidth;
@@ -378,7 +428,9 @@ void makeStyleBlock(){
 		styleBlockList ~= styleBlockByLine;
 		styleBlockByLine = null;
 		leftSpace = paperSize[2] - padding[0] - padding[1];
+
 	}
+
 
 	foreach(elem; sentences){
 		switch(elem.type){
@@ -388,11 +440,10 @@ void makeStyleBlock(){
 					//文字幅を取得する一連の†流れ†
 					string cid = string2cid(to!string(str));
 					uint ciduint = to!uint(cid,16);
-					uint advanceWidth = getAdvanceWidth(to!string(str),currentStyle.fontSize);
+					uint advanceWidth = getAdvanceWidth(to!string(str),currentStyle.fontID);
 					newStyleBlock.blockWidth += to!double(currentStyle.fontSize)*to!double(advanceWidth)/to!double(fonts[currentStyle.fontID].unitsPerEm);
 
 					if(leftSpace - to!double(currentStyle.fontSize)*to!double(advanceWidth)/to!double(fonts[currentStyle.fontID].unitsPerEm) < 0){
-						writeln("boboboboboboboboboboobobobobobobobobobobo");
 						lineFeed();
 						leftSpace = paperSize[2] - padding[0] - padding[1];
 					}
@@ -401,6 +452,17 @@ void makeStyleBlock(){
 					
 					//styleBlockに文字を追加
 					newStyleBlock.content ~= cid;
+
+					bool flag = true;;
+					foreach(a;fonts[currentStyle.fontID].widthCidMapping){
+						if(a.cid == ciduint){
+							flag = false;
+							break;
+						}
+					}
+					if(flag == true){
+						fonts[currentStyle.fontID].widthCidMapping ~= widthCidStruct(ciduint,advanceWidth);
+					}
 				}
 				break;
 			case "math":
@@ -412,9 +474,9 @@ void makeStyleBlock(){
 						break;
 
 					case "endRange":
+						renewStyleBlock();
 						currentStyle = styleStack.back;
 						styleStack.popBack();
-						renewStyleBlock();
 						break;
 
 					case "br":
@@ -425,12 +487,13 @@ void makeStyleBlock(){
 						break;
 
 					case "setFontSize":
+						renewStyleBlock();
 						auto argDict = argumentAnalyzer(elem.argument);
 						currentStyle.fontSize = to!int(argDict["_default_"]);
-						renewStyleBlock();
 						break;
 
 					case "setFont":
+						renewStyleBlock();
 						auto argDict = argumentAnalyzer(elem.argument);
 						string newFontName = to!string(argDict["_default_"]);
 
@@ -446,12 +509,9 @@ void makeStyleBlock(){
 
 						//未録フォントなら追加する
 						if(alreadyRegistered == false){
-							addNewFont(newFontName, "ASCII");
+							addNewFont(newFontName, "CID");
 							currentStyle.fontID = to!uint(fonts.length-1);
 						}
-
-						renewStyleBlock();
-						
 						break;
 
 					case "setAlign":
@@ -478,18 +538,18 @@ void makeStyleBlock(){
 				break;
 		}
 	}
-
 	lineFeed();
 }
 
 string streamBuff;
 
 void createStream(){
+
 	streamBuff ~= "BT\n";
 	
 	foreach(elem; styleBlockList){
 		streamBuff ~= "/F" ~ to!string(elem.blockStyle.fontID) ~ " " ~ to!string(elem.blockStyle.fontSize)
-					~ "Tf 1. 0. 0. 1. " ~ to!string(elem.x) ~ ". " ~ to!string(elem.y) ~ " Tm " ~ elem.content ~ "Tj";
+					~ " Tf 1. 0. 0. 1. " ~ to!string(elem.x) ~ ". " ~ to!string(elem.y) ~ ". Tm <" ~ elem.content ~ "> Tj\n";
 	}
 
 	streamBuff ~= "ET\n";
@@ -507,50 +567,6 @@ void createStream(){
 	}
 }
 
-/*
-void createStream(){
-	writeln("行の高さを計算しています");
-
-	streamBuff ~= "BT\n";
-	uint currentHeight = pageHeight - padding[3];
-	foreach(uint i, eachLine; outputlines){
-		if(i == 0){
-			currentHeight -= eachLine.maxFontSize + fonts[eachLine.biggestFontFontID].lineGap/fonts[eachLine.biggestFontFontID].unitsPerEm;
-		}else{
-			currentHeight -= eachLine.maxFontSize + outputlines[i-1].nextGap + fonts[eachLine.biggestFontFontID].lineGap/fonts[eachLine.biggestFontFontID].unitsPerEm;
-		}
-
-		switch(eachLine.textAlign){
-			case "left":
-				streamBuff ~= "1. 0. 0. 1. " ~ to!string(padding[0]) ~ ". " ~ to!string(currentHeight) ~ ". Tm ";
-				break;
-				case "center":
-				streamBuff ~= "1. 0. 0. 1. " ~ to!string(to!int((pageWidth -eachLine.lineWidth)/2)) ~ ". " ~ to!string(currentHeight) ~ ". Tm ";
-				break;
-			case "right":
-				streamBuff ~= "1. 0. 0. 1. " ~ to!string(to!int(pageWidth -eachLine.lineWidth -padding[1])) ~ ". " ~ to!string(currentHeight) ~ ". Tm ";
-				break;
-			default:
-				break;
-		}
-		
-		streamBuff ~= eachLine.stream;
-	}
-	streamBuff ~= "ET\n";
-
-	writeln("cidフォントの文字幅辞書を作っています。");
-	
-	foreach(font;fonts){
-		sort!("a.cid < b.cid")(font.widthCidMapping);
-		foreach(a; font.widthCidMapping){
-			if(a.width==1000)continue;
-			font.W ~= a.cid;
-			font.W ~= a.cid;
-			font.W ~= a.width;
-		}
-	}
-}
-*/
 
 //関数 argumentAnalyzer
 //
