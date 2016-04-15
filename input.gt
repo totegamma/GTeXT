@@ -5,6 +5,7 @@
 #setFontSize(60)
 #setFont(01FLOPDESIGN)
 柳暗花明又一村#br
-{#setFontSize(20)#setAlign(right)美術館「宇宙」より}#br
-#setFontSize(30) vol.1 実数は整数よりも多い!?#br
+{#setFontSize(20)#setAlign(right)美術館「宇宙」より}#br(30)
+#setFontSize(30)vol.1 実数は整数よりも多い!?
+{#setFontSize(15)#setAlign(right)未公開原稿}#br
 #setFontSize(10)途中でフォントサイズを{#setFontSize(30)変えて}みる。#br

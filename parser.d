@@ -418,7 +418,7 @@ void makeStyleBlock(){
 		}
 
 		//右寄せ
-		currentX = pageWidth - centerAlignBlockWidth - padding[3];
+		currentX = pageWidth - rightAlignBlockWidth- padding[3];
 		foreach(elem; rightAlignBlock){
 			elem.x = currentX;
 			elem.y = currentY;
@@ -515,19 +515,18 @@ void makeStyleBlock(){
 						break;
 
 					case "setAlign":
+						renewStyleBlock();
 						auto argDict = argumentAnalyzer(elem.argument);
 						string newAlign= to!string(argDict["_default_"]);
 						if(currentStyle.fontAlign == "left" && newAlign == "center"){
 							leftSpace -= (paperSize[2] + padding[0] + padding[1])/2;
-							renewStyleBlock();
 						}else if(currentStyle.fontAlign == "center" && newAlign == "right"){
-							renewStyleBlock();
 						}else if(currentStyle.fontAlign == "left" && newAlign == "right"){
-							renewStyleBlock();
 						}else{
-							currentStyle.fontAlign = newAlign;
 							//改行
+							lineFeed();
 						}
+							currentStyle.fontAlign = newAlign;
 						break;
 
 					default:
