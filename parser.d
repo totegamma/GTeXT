@@ -61,7 +61,7 @@ struct style{
 	uint fontSize;
 	uint fontID;
 	string fontAlign;
-	string fontName;
+	string styleName;
 }
 
 style[] styleStack;	//範囲指定子が使うやつ
@@ -131,8 +131,6 @@ void parse(){
 	loadcmap.loadcmap();
 	paperSizeDictionary = ["a4":[0,0,595,842]];		//TODO ここなんとかする
 
-	writeln("本文の解析を開始します");
-
 	perseToSentences(inputFile);
 	//encodeSentences();
 	makeStyleBlock();
@@ -152,7 +150,6 @@ void perseToSentences(string inputFileName){
 	string buff;				//TODO 変数名の改善
 
 	auto fin = File(inputFileName,"r");
-	writeln("プリコマンドを解析しています。");
 
 	while(!fin.eof){
 		line = fin.readln.chomp;	//.chompで改行コードを除去
@@ -207,6 +204,25 @@ void perseToSentences(string inputFileName){
 											~ "mm 右:" ~ to!string(padding[3])
 											~ "mm)");
 									break;
+								case "style":
+									uint newFontID;
+									//フォントがすでに登録されているか確認
+									bool alreadyRegistered = false;
+									foreach(uint i, font; fonts){
+										if(font.fontName == argDict["font"]){
+											newFontID = i;
+											alreadyRegistered = true;
+											break;
+										}
+									}
+
+									//未録フォントなら追加する
+									if(alreadyRegistered == false){
+										addNewFont(argDict["font"], "CID");
+										newFontID = to!uint(fonts.length-1);
+									}
+									styleList ~= style(to!uint(argDict["size"]),newFontID,"",argDict["name"]);
+									break;
 								default:
 									writeln("Error! 存在しないプリコマンド" ~ precommand);
 									break;
@@ -223,8 +239,6 @@ void perseToSentences(string inputFileName){
 			}
 		}
 	}
-
-	writeln("本文を解析しています");
 
 	//ファイル読み込みのシーカーを頭に戻す
 	fin.rewind();
@@ -296,6 +310,11 @@ void perseToSentences(string inputFileName){
 							sentences ~= sentence("command",buff);
 							buff = "";
 							currentmode = "argument";
+							break;
+						case '#':
+							sentences ~= sentence("command",buff);
+							buff = "";
+							currentmode = "command";
 							break;
 						default:
 							buff ~= str;
@@ -433,38 +452,41 @@ void makeStyleBlock(){
 
 	}
 
+	void addChar(string str){
+		//文字幅を取得する一連の†流れ†
+		string cid = string2cid(str);
+		uint ciduint = to!uint(cid,16);
+		uint advanceWidth = getAdvanceWidth(to!string(str),currentStyle.fontID);
+		newStyleBlock.blockWidth += to!double(currentStyle.fontSize)*to!double(advanceWidth)/to!double(fonts[currentStyle.fontID].unitsPerEm);
+
+		if(leftSpace - to!double(currentStyle.fontSize)*to!double(advanceWidth)/to!double(fonts[currentStyle.fontID].unitsPerEm) < 0){
+			lineFeed();
+			leftSpace = paperSize[2] - padding[0] - padding[1];
+		}
+
+		leftSpace -= to!double(currentStyle.fontSize)*to!double(advanceWidth)/to!double(fonts[currentStyle.fontID].unitsPerEm);
+
+		//styleBlockに文字を追加
+		newStyleBlock.content ~= cid;
+
+		bool flag = true;;
+		foreach(a;fonts[currentStyle.fontID].widthCidMapping){
+			if(a.cid == ciduint){
+				flag = false;
+				break;
+			}
+		}
+		if(flag == true){
+			fonts[currentStyle.fontID].widthCidMapping ~= widthCidStruct(ciduint,advanceWidth);
+		}
+
+	}
 
 	foreach(elem; sentences){
 		switch(elem.type){
 			case "normal":
 				foreach(str; array(elem.content)){ //1文字づつ取り出す
-
-					//文字幅を取得する一連の†流れ†
-					string cid = string2cid(to!string(str));
-					uint ciduint = to!uint(cid,16);
-					uint advanceWidth = getAdvanceWidth(to!string(str),currentStyle.fontID);
-					newStyleBlock.blockWidth += to!double(currentStyle.fontSize)*to!double(advanceWidth)/to!double(fonts[currentStyle.fontID].unitsPerEm);
-
-					if(leftSpace - to!double(currentStyle.fontSize)*to!double(advanceWidth)/to!double(fonts[currentStyle.fontID].unitsPerEm) < 0){
-						lineFeed();
-						leftSpace = paperSize[2] - padding[0] - padding[1];
-					}
-
-					leftSpace -= to!double(currentStyle.fontSize)*to!double(advanceWidth)/to!double(fonts[currentStyle.fontID].unitsPerEm);
-					
-					//styleBlockに文字を追加
-					newStyleBlock.content ~= cid;
-
-					bool flag = true;;
-					foreach(a;fonts[currentStyle.fontID].widthCidMapping){
-						if(a.cid == ciduint){
-							flag = false;
-							break;
-						}
-					}
-					if(flag == true){
-						fonts[currentStyle.fontID].widthCidMapping ~= widthCidStruct(ciduint,advanceWidth);
-					}
+					addChar(to!string(str));
 				}
 				break;
 			case "math":
@@ -489,7 +511,22 @@ void makeStyleBlock(){
 						}
 						break;
 
+					case "setstyle":
+					case "setStyle":
+						renewStyleBlock();
+						string tmpAlign = currentStyle.fontAlign;
+						//TODO 見つからなかった時の処理
+						foreach(eachStyle; styleList){
+							auto argDict = argumentAnalyzer(elem.argument);
+							if(eachStyle.styleName == argDict["_default_"]){
+								currentStyle = eachStyle;
+								currentStyle.fontAlign = tmpAlign;
+							}
+						}
+						break;
+
 					case "pi":
+						addChar("π");
 						break;
 
 					case "setFontSize":
@@ -559,8 +596,6 @@ void createStream(){
 
 	streamBuff ~= "ET\n";
 
-	writeln("cidフォントの文字幅辞書を作っています。");
-	
 	foreach(font;fonts){
 		sort!("a.cid < b.cid")(font.widthCidMapping);
 		foreach(a; font.widthCidMapping){

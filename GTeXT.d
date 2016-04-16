@@ -46,7 +46,6 @@ void main(){
 //
 void outputpdf(){
 
-	writeln("PDFを出力しています");
 
 	//上書き
 	auto fout = File(outputFile,"w");
@@ -103,8 +102,6 @@ void outputpdf(){
 //
 
 void construct(){
-
-	writeln("PDFの構造体を作っています");
 
 	//0 0 objは空(プログラムの簡易化のために下駄を履かせた)
 	pdfObjects ~= new pdfObject("null");
